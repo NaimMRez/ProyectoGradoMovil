@@ -19,7 +19,7 @@ Proyecto de Grado · Ingeniería de Sistemas · UMSS.
 | Pantallas | **Las 18, navegables.** |
 | Capa de datos | Completa contra el adaptador mock. Un flag la apunta al backend real. |
 | Ubicación, foto, fecha, tiempo real | Completos. |
-| Backend (`petgo-backend/`) | Pendiente. |
+| Backend (`petgo-backend/`) | Escrito y compilando. **Falta migrar contra una base con PostGIS.** |
 
 La app **funciona hoy sin backend**: `src/api/mock/` implementa el mismo
 contrato contra un almacén en memoria, con los datos del seed y las reglas de
@@ -28,21 +28,72 @@ apunta al servidor real sin tocar ninguna pantalla.
 
 ---
 
-## Cómo correrla
+## Estructura
+
+```
+proyectoGradoClaude/
+├── petgo-app/       React Native · Expo SDK 57
+├── petgo-backend/   Node · Express · Prisma · PostGIS · Socket.io
+└── README.md
+```
+
+Son proyectos hermanos, no anidados. Lo único que los une es el contrato de la
+API, que del lado de la app está aislado en `src/api/`.
+
+---
+
+## Cómo correr la app
 
 ```bash
 cd petgo-app && npm install && npx expo start
 ```
 
 Escanea el QR con **Expo Go** desde tu teléfono. El Mac y el teléfono tienen
-que estar en la misma red.
-
-Otros comandos:
+que estar en la misma red. **La app funciona sin el backend**: arranca contra el
+adaptador mock.
 
 ```bash
 npm run typecheck   # tsc --noEmit
 npm run pruebas     # reglas de estado, formateadores y geolocalización
 ```
+
+---
+
+## Cómo correr el backend
+
+Requiere **PostgreSQL con PostGIS**. Si no lo tienes:
+
+```bash
+brew install postgis
+```
+
+Después:
+
+```bash
+cd petgo-backend
+npm install
+cp .env.example .env          # ajusta DATABASE_URL y genera un JWT_SECRET
+createdb petgo_grado
+npx prisma generate
+npm run db:migrate            # crea la extensión, las tablas y el índice GiST
+npm run db:seed
+npm run dev                   # http://localhost:4000
+```
+
+El servidor comprueba al arrancar que Postgres responde y que PostGIS está
+instalado; si algo falta, lo dice con el comando exacto en vez de fallar en la
+primera petición.
+
+```bash
+npm run typecheck
+npm run pruebas               # 22 comprobaciones de las reglas del cliente
+npm run build && npm start    # compilado
+npm run db:studio             # explorador de la base
+```
+
+Para apuntar la app al backend real, cambia `USAR_MOCK` a `false` en
+`petgo-app/src/api/config.ts` y pon en `URL_BASE` la IP de tu máquina en la red
+local — desde un teléfono, `localhost` es el propio teléfono.
 
 ### Cuentas del seed
 
@@ -131,13 +182,29 @@ demostración de chat entre dos teléfonos necesita el backend levantado.
 
 ### PostGIS
 
-- `ST_DWithin` sobre `geography` mide en **metros**, y es lo que usa el índice
-  GiST. Poner `ST_Distance(...) < radio` en el `WHERE` degrada a escaneo
-  secuencial.
-- `ST_MakePoint` recibe **(longitud, latitud)**, en ese orden.
+La consulta de solicitudes cercanas está en
+`petgo-backend/src/modules/requests/requests.repository.ts`, en SQL crudo.
+
+- `ST_DWithin` sobre `geography` mide en **metros**, y es lo que puede usar el
+  índice GiST. Poner `ST_Distance(...) < radio` en el `WHERE` da el mismo
+  resultado y degrada a escaneo secuencial de la tabla entera.
+- `ST_Distance` se calcula en el `SELECT`, no en el `WHERE`: así el filtro lo
+  hace el índice y la distancia se calcula sólo para lo que sobrevivió.
+- `ST_MakePoint` recibe **(longitud, latitud)**, en ese orden. Invertirlos no da
+  error: coloca el punto en otro continente y la lista sale vacía.
 - Prisma no tiene tipo `geography`: las columnas `ubicacion` van como
   `Unsupported` y un trigger las mantiene sincronizadas desde `lat`/`lng`.
-  Nunca se escribe `ubicacion` desde Prisma.
+  **Nunca se escribe `ubicacion` desde Prisma.**
+
+### Dónde vive cada regla
+
+`petgo-backend/src/domain/status.ts` es **la autoridad** sobre las transiciones
+de estado. `petgo-app/src/api/estados.ts` es un espejo que sólo decide qué
+botones se pintan. Si discrepan, manda el servidor, y el que está mal es el
+cliente.
+
+Las dos suites de pruebas cubren las mismas cinco reglas por separado, a
+propósito.
 
 ### Interfaz
 

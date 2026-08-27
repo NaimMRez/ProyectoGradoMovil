@@ -1,0 +1,241 @@
+// Esquema de PetGo.
+//
+// Los modelos van en español, igual que el resto del producto; el `@@map` y el
+// `@map` los llevan a nombres de tabla y columna en snake_case, que es la
+// convención de PostgreSQL.
+//
+// Nota sobre PostGIS: Prisma no tiene tipo `geography`. Las columnas
+// `ubicacion` están declaradas como `Unsupported` para que Prisma sepa que
+// existen y no las borre en la próxima migración, pero **nunca se escriben
+// desde Prisma**: un trigger las mantiene sincronizadas a partir de `lat` y
+// `lng`. La consulta por radio es SQL crudo en `requests.repository.ts`.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// El rol se elige en el registro y no cambia. Determina toda la navegación.
+enum Rol {
+  dueno
+  cuidador
+}
+
+/// Secuencia: publicada → aceptada → programada → proceso → finalizada.
+/// `cancelada` es terminal y alcanzable desde cualquier punto.
+enum EstadoServicio {
+  publicada
+  aceptada
+  programada
+  proceso
+  finalizada
+  cancelada
+}
+
+enum Sexo {
+  macho
+  hembra
+}
+
+enum Tamano {
+  pequeno
+  mediano
+  grande
+}
+
+enum TipoNotificacion {
+  interes
+  confirmar
+  iniciado
+  aceptado
+  cancelada
+}
+
+model Usuario {
+  id           String   @id @default(uuid())
+  nombre       String
+  correo       String   @unique
+  telefono     String
+  claveHash    String   @map("password_hash")
+  rol          Rol
+  zona         String   @default("Cercado, Cochabamba")
+  fotoUrl      String?  @map("foto_url")
+
+  /// Sólo tiene sentido en cuidadores. No hay calificaciones: este contador es
+  /// toda la reputación que el cliente quiso.
+  paseosCompletados Int? @map("paseos_completados")
+
+  lat Float?
+  lng Float?
+
+  /// La mantiene un trigger desde lat/lng. Nunca escribir desde Prisma.
+  ubicacion Unsupported("geography(Point, 4326)")?
+
+  creadoEn DateTime @default(now()) @map("created_at")
+
+  mascotas         Mascota[]
+  solicitudesDueno Solicitud[]     @relation("SolicitudesDelDueno")
+  serviciosCuidador Solicitud[]    @relation("ServiciosDelCuidador")
+  intereses        Interes[]
+  mensajes         Mensaje[]
+  notificaciones   Notificacion[]
+
+  @@map("users")
+}
+
+model Mascota {
+  id      String  @id @default(uuid())
+  duenoId String  @map("owner_id")
+  nombre  String
+  raza    String  @default("Mestizo")
+  edad    String  @default("—")
+  sexo    Sexo    @default(macho)
+  tamano  Tamano  @default(mediano)
+  peso    String  @default("—")
+  notas   String  @default("")
+  fotoUrl String? @map("foto_url")
+
+  creadoEn DateTime @default(now()) @map("created_at")
+
+  dueno       Usuario           @relation(fields: [duenoId], references: [id], onDelete: Cascade)
+  solicitudes SolicitudMascota[]
+
+  @@index([duenoId])
+  @@map("pets")
+}
+
+model Solicitud {
+  id      String @id @default(uuid())
+  /// Correlativo visible: "#1042". Lo asigna una secuencia de Postgres.
+  codigo  Int    @unique @default(autoincrement())
+  duenoId String @map("owner_id")
+  /// Nulo mientras la solicitud siga publicada.
+  cuidadorId String? @map("carer_id")
+
+  fechaHora   DateTime @map("fecha_hora")
+  duracionMin Int      @map("duracion_min")
+  pagoBs      Int      @map("pago_bs")
+
+  direccion String
+  zona      String
+  lat       Float
+  lng       Float
+
+  /// La mantiene un trigger desde lat/lng. Es la columna que indexa el GiST.
+  ubicacion Unsupported("geography(Point, 4326)")?
+
+  notas  String         @default("")
+  estado EstadoServicio @default(publicada)
+
+  /// Separa "el cuidador terminó" de "el dueño cerró". Sin esta bandera la
+  /// regla de confirmación del cliente no se puede expresar.
+  awaitingConfirmation Boolean @default(false) @map("awaiting_confirmation")
+
+  creadoEn      DateTime @default(now()) @map("created_at")
+  actualizadoEn DateTime @updatedAt @map("updated_at")
+
+  dueno    Usuario  @relation("SolicitudesDelDueno", fields: [duenoId], references: [id], onDelete: Cascade)
+  cuidador Usuario? @relation("ServiciosDelCuidador", fields: [cuidadorId], references: [id], onDelete: SetNull)
+
+  mascotas       SolicitudMascota[]
+  intereses      Interes[]
+  mensajes       Mensaje[]
+  notificaciones Notificacion[]
+  eventos        EventoEstado[]
+
+  @@index([estado])
+  @@index([duenoId])
+  @@index([cuidadorId])
+  @@map("requests")
+}
+
+/// Tabla puente: una solicitud puede llevar varias mascotas.
+model SolicitudMascota {
+  solicitudId String @map("request_id")
+  mascotaId   String @map("pet_id")
+
+  solicitud Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  mascota   Mascota   @relation(fields: [mascotaId], references: [id], onDelete: Cascade)
+
+  @@id([solicitudId, mascotaId])
+  @@index([mascotaId])
+  @@map("request_pets")
+}
+
+/// Historial de transiciones, para el timeline de seguimiento.
+model EventoEstado {
+  id          String         @id @default(uuid())
+  solicitudId String         @map("request_id")
+  estado      EstadoServicio
+  creadoEn    DateTime       @default(now()) @map("created_at")
+
+  solicitud Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+
+  @@index([solicitudId])
+  @@map("request_status_events")
+}
+
+model Interes {
+  id          String @id @default(uuid())
+  solicitudId String @map("request_id")
+  cuidadorId  String @map("carer_id")
+  mensaje     String @default("")
+
+  /// Distancia en metros desde el cuidador al punto de recogida, congelada en
+  /// el momento en que se ofreció. No se recalcula al mostrarla: al dueño le
+  /// importa dónde estaba el cuidador cuando dijo que sí, no dónde esté ahora.
+  metros Float @default(0)
+
+  creadoEn DateTime @default(now()) @map("created_at")
+
+  solicitud Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  cuidador  Usuario   @relation(fields: [cuidadorId], references: [id], onDelete: Cascade)
+
+  /// Un cuidador se ofrece una sola vez por solicitud.
+  @@unique([solicitudId, cuidadorId])
+  @@index([solicitudId])
+  @@map("interests")
+}
+
+/// Un mensaje pertenece a una solicitud, no a un par de usuarios.
+///
+/// No hay tabla `conversations`: una conversación **es** una solicitud con
+/// cuidador asignado más sus mensajes. Dos personas que coinciden en dos
+/// paseos tienen dos hilos, y eso es exactamente lo que el cliente pidió.
+model Mensaje {
+  id          String    @id @default(uuid())
+  solicitudId String    @map("request_id")
+  autorId     String    @map("sender_id")
+  texto       String
+  leidoEn     DateTime? @map("read_at")
+
+  creadoEn DateTime @default(now()) @map("created_at")
+
+  solicitud Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  autor     Usuario   @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  @@index([solicitudId, creadoEn])
+  @@map("messages")
+}
+
+model Notificacion {
+  id          String           @id @default(uuid())
+  usuarioId   String           @map("user_id")
+  tipo        TipoNotificacion
+  titulo      String
+  cuerpo      String
+  solicitudId String?          @map("request_id")
+  leida       Boolean          @default(false)
+
+  creadoEn DateTime @default(now()) @map("created_at")
+
+  usuario   Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  solicitud Solicitud? @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, creadoEn])
+  @@map("notifications")
+}

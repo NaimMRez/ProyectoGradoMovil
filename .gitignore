@@ -44,3 +44,11 @@ yarn-error.*
 .idea/
 .vscode/
 *.tsbuildinfo
+
+# Documentación que Prisma instala para agentes de IA. Útil localmente,
+# ruido en el repo de un proyecto de grado.
+.agents/
+skills-lock.json
+
+# Cliente generado por Prisma. Se reconstruye con `prisma generate`.
+petgo-backend/src/generated/
