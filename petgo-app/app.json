@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "PetGo",
+    "slug": "petgo-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "petgo",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "backgroundColor": "#f7fbf8",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "bo.edu.umss.petgo",
+      "infoPlist": {
+        "CADisableMinimumFrameDurationOnPhone": true,
+        "NSLocationWhenInUseUsageDescription": "PetGo usa tu ubicación para mostrarte los paseos cercanos y calcular la distancia hasta el punto de recogida."
+      }
+    },
+    "android": {
+      "package": "bo.edu.umss.petgo",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#1b683e",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-image",
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#185b37",
+          "image": "./assets/icon.png",
+          "imageWidth": 140,
+          "resizeMode": "contain"
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ]
+  }
+}

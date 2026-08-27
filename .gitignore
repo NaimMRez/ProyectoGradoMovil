@@ -1,0 +1,46 @@
+# Dependencias
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Nativo
+ios/
+android/
+.kotlin/
+
+# Entorno — nunca subir credenciales ni cadenas de conexión
+.env
+.env.*
+!.env.example
+
+# Prisma
+petgo-backend/prisma/*.db
+petgo-backend/prisma/*.db-journal
+
+# Compilado del backend
+petgo-backend/dist/
+
+# Subidas locales
+petgo-backend/uploads/
+
+# Sistema
+.DS_Store
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Editores
+.idea/
+.vscode/
+*.tsbuildinfo
