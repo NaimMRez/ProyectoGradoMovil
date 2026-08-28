@@ -95,6 +95,12 @@ Para apuntar la app al backend real, cambia `USAR_MOCK` a `false` en
 `petgo-app/src/api/config.ts` y pon en `URL_BASE` la IP de tu máquina en la red
 local — desde un teléfono, `localhost` es el propio teléfono.
 
+Las dos implementaciones del cliente (`src/api/mock/adaptador.ts` y
+`src/api/http.ts`) exponen la misma superficie, y `client.ts` lo comprueba con
+un `satisfies`: si una se desvía de la otra, deja de compilar. Es el momento
+correcto para enterarse — y no en el dispositivo, con la app ya apuntando al
+servidor.
+
 ### Cuentas del seed
 
 Contraseña de todas: `petgo1234`. La pantalla de login las lista mientras

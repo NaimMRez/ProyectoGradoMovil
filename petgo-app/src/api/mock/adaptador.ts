@@ -35,7 +35,14 @@ import {
   type InteresCrudo,
   type SolicitudCruda,
 } from './datos';
-import { bolivianos, distancia, fechaHora, diaRelativo, hora, pagoMinimo, plural, radioEnMetros } from './formato';
+import {
+  diaRelativo,
+  fechaHora,
+  hora,
+  pagoMinimo,
+  plural,
+  radioEnMetros,
+} from './formato';
 import { distanciaEnMetros, origenDeBusqueda, type Punto } from '../../utiles/geo';
 import { emitirLocal } from '../tiempoReal';
 
@@ -644,4 +651,3 @@ export function toastFiltros(cuantas: number): string {
   return `Filtros aplicados · ${plural(cuantas, 'solicitud', 'solicitudes')}`;
 }
 
-export { bolivianos, distancia };

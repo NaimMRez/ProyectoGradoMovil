@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api } from '../api/client';
+import { api, olvidarToken } from '../api/client';
 import type { Rol, Usuario } from '../api/tipos';
 import { tiempoReal } from '../api/tiempoReal';
 
@@ -88,7 +88,10 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
   const salir = useCallback(async () => {
     tiempoReal.desconectar();
     setUsuario(null);
-    await AsyncStorage.removeItem(CLAVE_ALMACEN);
+    // El perfil y el token se guardan por separado: dejar el token vivo tras
+    // cerrar sesión permitiría que la siguiente petición siguiera autenticada
+    // como la cuenta anterior.
+    await Promise.all([AsyncStorage.removeItem(CLAVE_ALMACEN), olvidarToken()]);
   }, []);
 
   const valor = useMemo(
