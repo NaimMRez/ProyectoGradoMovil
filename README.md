@@ -42,71 +42,114 @@ API, que del lado de la app está aislado en `src/api/`.
 
 ---
 
-## Cómo correr la app
+## Cómo correr todo en local
+
+Hay **dos modos**. El primero no necesita base de datos ni servidor.
+
+### Modo A · Sólo la app (para ver y navegar las 18 pantallas)
 
 ```bash
 cd petgo-app && npm install && npx expo start
 ```
 
-Escanea el QR con **Expo Go** desde tu teléfono. El Mac y el teléfono tienen
-que estar en la misma red. **La app funciona sin el backend**: arranca contra el
-adaptador mock.
+Escanea el QR con **Expo Go**. Ya está: la app corre entera contra el
+adaptador en memoria, con los datos del seed y las reglas de estado completas.
+Es el modo por defecto (`USAR_MOCK = true`).
 
-```bash
-npm run typecheck   # tsc --noEmit
-npm run pruebas     # reglas de estado, formateadores y geolocalización
-```
+### Modo B · App + backend real
 
----
-
-## Cómo correr el backend
-
-Requiere **PostgreSQL con PostGIS**. Si no lo tienes:
+**1 · Postgres con PostGIS.** Sólo la primera vez:
 
 ```bash
 brew install postgis
+brew services start postgresql@18
+createdb petgo_grado
 ```
 
-Después:
+**2 · El backend:**
 
 ```bash
 cd petgo-backend
 npm install
 cp .env.example .env          # ajusta DATABASE_URL y genera un JWT_SECRET
-createdb petgo_grado
 npx prisma generate
-npm run db:migrate            # crea la extensión, las tablas y el índice GiST
+npm run db:migrate            # extensión, tablas, triggers e índice GiST
 npm run db:seed
 npm run dev                   # http://localhost:4000
 ```
 
-El servidor comprueba al arrancar que Postgres responde y que PostGIS está
-instalado; si algo falta, lo dice con el comando exacto en vez de fallar en la
-primera petición.
+**3 · Apunta la app al backend.** Una sola línea en
+`petgo-app/src/api/config.ts`:
 
-```bash
-npm run verificar             # typecheck + reglas + contrato
-npm run pruebas               # 24 comprobaciones de las reglas del cliente
-npm run pruebas:contrato      # las rutas de la app existen en el servidor
-npm run pruebas:humo          # 27 comprobaciones contra la API levantada
-npm run build && npm start    # compilado
-npm run db:studio             # explorador de la base
+```ts
+export const USAR_MOCK = false;
 ```
 
-`pruebas` y `pruebas:contrato` corren sin base de datos ni servidor.
+No hace falta tocar la IP: `URL_BASE` la deduce del `hostUri` de Metro, que es
+la misma a la que el teléfono acaba de conectarse para bajar el bundle.
+
+**4 · La app**, en otra terminal:
+
+```bash
+cd petgo-app && npx expo start
+```
+
+### El Mac y el teléfono tienen que verse
+
+Expo Go y el backend viajan por la red local, así que los dos dispositivos
+tienen que estar en la **misma red** — típicamente el teléfono por wifi y el
+Mac por wifi o por cable del mismo router.
+
+Para comprobarlo, con el backend levantado:
+
+```bash
+curl http://$(ipconfig getifaddr en0 || ipconfig getifaddr en7):4000/health
+```
+
+Si eso responde `{"ok":true,...}`, el teléfono también llegará. Si no responde,
+suele ser una de tres: el backend no está levantado, el Mac y el teléfono están
+en redes distintas, o el firewall de macOS está bloqueando conexiones entrantes
+(Ajustes → Red → Firewall).
+
+### Detener todo
+
+`Ctrl+C` en cada terminal. Y si quieres parar Postgres:
+
+```bash
+brew services stop postgresql@18
+```
+
+---
+
+## Pruebas
+
+```bash
+cd petgo-app
+npm run typecheck
+npm run pruebas               # 20 · reglas de estado, formateadores, geolocalización
+
+cd petgo-backend
+npm run verificar             # typecheck + reglas + contrato
+npm run pruebas               # 24 · las reglas del cliente, sin base de datos
+npm run pruebas:contrato      # 23 · las rutas de la app existen en el servidor
+npm run pruebas:humo          # 27 · contra la API levantada y sembrada
+```
+
+Las tres primeras del backend corren sin base de datos ni servidor.
 `pruebas:humo` necesita las dos cosas: recorre el flujo entero por HTTP —
 el cuidador rechazado con 409 mientras `awaitingConfirmation` está activo, el
 dueño cerrando el servicio, la consulta geoespacial ordenada por distancia.
 
-Para apuntar la app al backend real, cambia `USAR_MOCK` a `false` en
-`petgo-app/src/api/config.ts` y pon en `URL_BASE` la IP de tu máquina en la red
-local — desde un teléfono, `localhost` es el propio teléfono.
+Otros comandos del backend:
 
-Las dos implementaciones del cliente (`src/api/mock/adaptador.ts` y
-`src/api/http.ts`) exponen la misma superficie, y `client.ts` lo comprueba con
-un `satisfies`: si una se desvía de la otra, deja de compilar. Es el momento
-correcto para enterarse — y no en el dispositivo, con la app ya apuntando al
-servidor.
+```bash
+npm run build && npm start    # compilado
+npm run db:studio             # explorador de la base
+npm run db:reset              # borra y vuelve a migrar desde cero
+npm run db:seed               # vuelve a dejar la base en el estado de demo
+```
+
+---
 
 ### Cuentas del seed
 
