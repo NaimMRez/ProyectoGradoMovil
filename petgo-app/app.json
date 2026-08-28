@@ -14,7 +14,7 @@
       "bundleIdentifier": "bo.edu.umss.petgo",
       "infoPlist": {
         "CADisableMinimumFrameDurationOnPhone": true,
-        "NSLocationWhenInUseUsageDescription": "PetGo usa tu ubicación para mostrarte los paseos cercanos y calcular la distancia hasta el punto de recogida."
+        "NSLocationWhenInUseUsageDescription": "PetGo usa tu ubicaci\u00f3n para mostrarte los paseos cercanos y calcular la distancia hasta el punto de recogida."
       }
     },
     "android": {
@@ -43,7 +43,6 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-image",
       "expo-web-browser",
       [
         "expo-splash-screen",
@@ -53,8 +52,7 @@
           "imageWidth": 140,
           "resizeMode": "contain"
         }
-      ],
-      "@react-native-community/datetimepicker"
+      ]
     ]
   }
 }

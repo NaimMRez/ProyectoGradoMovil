@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
-import type Reanimated from 'react-native-reanimated';
-import {
-  KeyboardChatScrollView,
-  KeyboardStickyView,
-} from 'react-native-keyboard-controller';
+import { ScrollView, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -65,22 +61,25 @@ function Burbuja({ mensaje, propio }: { mensaje: Mensaje; propio: boolean }) {
  *
  * **Es la única pantalla donde el teclado compite con el contenido.**
  *
- * Va con `react-native-keyboard-controller`, que sigue la posición real del
- * teclado fotograma a fotograma en el hilo de UI. El brief daba por hecho que
- * esta librería no estaba en Expo Go y que había que conformarse con
- * `KeyboardAvoidingView`: era cierto en SDKs anteriores, pero en el 57 viene
- * incluida. Importa, porque el teclado sube por una curva privada del sistema
- * y cualquier duración que uno elija a mano va a ir visiblemente desfasada.
+ * El `KeyboardAvoidingView` de aquí es **el de
+ * `react-native-keyboard-controller`, no el de React Native**. Tienen el mismo
+ * nombre y hacen cosas distintas: el de React Native reacciona a un evento que
+ * llega tarde y con una duración inventada, así que siempre va desfasado del
+ * teclado; el de la librería lee la posición real del teclado fotograma a
+ * fotograma en el hilo de UI.
  *
- * `KeyboardChatScrollView` ajusta el inset inferior del historial mientras el
- * teclado se mueve, así que el último mensaje nunca queda tapado; la barra de
- * escritura va en `KeyboardStickyView`, pegada al borde del teclado.
+ * El brief daba por perdida esta librería, suponiendo que no venía en Expo Go.
+ * Sí viene — desde el SDK 54 —, así que el compromiso que el brief aceptaba no
+ * hacía falta.
+ *
+ * Con `behavior="padding"` la cabecera se queda arriba, el historial encoge y
+ * la barra de escritura sube pegada al teclado.
  */
 export default function Conversacion() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const usuario = useUsuario();
   const insets = useSafeAreaInsets();
-  const scroll = useRef<Reanimated.ScrollView>(null);
+  const scroll = useRef<ScrollView>(null);
 
   const [borrador, setBorrador] = useState('');
 
@@ -119,7 +118,10 @@ export default function Conversacion() {
   const vinculada = conversacion.data?.solicitud;
 
   return (
-    <View style={{ flex: 1, backgroundColor: superficie.app }}>
+    <KeyboardAvoidingView
+      behavior="padding"
+      style={{ flex: 1, backgroundColor: superficie.app }}
+    >
       {/* ── Cabecera ─────────────────────────────────────────────────────── */}
       <View
         style={{
@@ -203,7 +205,7 @@ export default function Conversacion() {
       </View>
 
       {/* ── Historial ────────────────────────────────────────────────────── */}
-      <KeyboardChatScrollView
+      <ScrollView
         ref={scroll}
         style={{ flex: 1 }}
         contentContainerStyle={{
@@ -230,14 +232,10 @@ export default function Conversacion() {
             />
           ))
         )}
-      </KeyboardChatScrollView>
+      </ScrollView>
 
       {/* ── Barra de escritura ───────────────────────────────────────────── */}
-      {/* Con el teclado cerrado, la barra deja el hueco del área segura; con el
-          teclado abierto ese hueco sobra, porque el teclado ya lo ocupa. Eso es
-          lo que compensa `offset.opened`. */}
-      <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
-        <View
+      <View
           style={{
             flexDirection: 'row',
             alignItems: 'flex-end',
@@ -292,9 +290,8 @@ export default function Conversacion() {
             }}
           >
             <Icono nombre="send" tamano={21} color={texto.sobrePrimario} />
-          </PressableScale>
-        </View>
-      </KeyboardStickyView>
-    </View>
+        </PressableScale>
+      </View>
+    </KeyboardAvoidingView>
   );
 }

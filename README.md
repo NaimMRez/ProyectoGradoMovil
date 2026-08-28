@@ -290,7 +290,7 @@ propósito.
 
 ## Stack
 
-- **Móvil:** React Native · Expo SDK 57 · TypeScript · expo-router ·
+- **Móvil:** React Native 0.81 · Expo SDK 54 · TypeScript · expo-router ·
   TanStack Query · Reanimated 4 · react-native-maps con tiles de CartoDB Positron.
 - **Backend:** Node · Express · Prisma · Zod · Socket.io.
 - **Base de datos:** PostgreSQL + PostGIS.
@@ -299,20 +299,47 @@ propósito.
 
 ## Expo Go
 
-El cliente fijó Expo Go, y eso condiciona qué módulos nativos se pueden usar.
-Conviene verificar caso por caso antes de dar nada por perdido: la lista de lo
-que trae Expo Go está en `expo/bundledNativeModules.json` del propio proyecto.
+El cliente fijó Expo Go, y eso decide dos cosas: **qué SDK puede usar el
+proyecto** y qué módulos nativos están disponibles.
 
-- **`react-native-keyboard-controller` sí está en Expo Go a partir del SDK 57.**
-  El brief daba por hecho que no y que había que conformarse con
-  `KeyboardAvoidingView`; era cierto en SDKs anteriores. El chat usa la
-  librería de verdad, que sigue la posición real del teclado fotograma a
-  fotograma en el hilo de UI.
+### El SDK lo fija Expo Go, no el proyecto
+
+**El proyecto está en SDK 54 porque es el SDK que soporta el Expo Go publicado
+en la App Store.** No es una elección de comodidad: Expo Go admite un solo SDK
+a la vez, y un proyecto por delante de esa versión no abre en ningún iPhone,
+por nuevo que sea el teléfono o el iOS.
+
+Antes de subir de SDK hay que comprobar qué hay publicado de verdad, y no
+fiarse del `iosClientVersion` que devuelve la API de Expo — ése es su build
+interno:
+
+```bash
+curl -s "https://itunes.apple.com/lookup?id=982107779" \
+  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=JSON.parse(s).results[0];console.log('Expo Go en la App Store:',r.version,'· iOS≥'+r.minimumOsVersion)})"
+```
+
+Con una *development build* (`npx expo run:ios`) el SDK viaja dentro del
+binario y esta restricción desaparece. Pero eso sale de Expo Go, que es
+justamente lo que el cliente no quiso.
+
+### Módulos
+
+Lo que trae Expo Go está en `expo/bundledNativeModules.json` del propio
+proyecto. Conviene verificar caso por caso antes de dar nada por perdido:
+
+- **`react-native-keyboard-controller` sí está en Expo Go desde el SDK 54.**
+  El brief lo daba por perdido y aceptaba conformarse con el
+  `KeyboardAvoidingView` de React Native. El chat usa el de la librería, que
+  sigue la posición real del teclado fotograma a fotograma en el hilo de UI.
 - **Los tabs nativos son riesgosos** en Expo Go, y el diseño pide una barra muy
   específica con píldora de fondo. Va una barra propia.
 - **react-native-maps en Android necesita una API key de Google** en `app.json`
   (`android.config.googleMaps.apiKey`), aunque los tiles vengan de CartoDB.
   Está vacía: hay que ponerla antes de compilar para Android.
+- **El config plugin de `@react-native-community/datetimepicker` está quitado**
+  de `app.json`. En Expo Go los config plugins no se aplican, y ése arrastraba
+  una dependencia que npm no resolvía. Hay que volver a añadirlo al pasar a una
+  build nativa: sólo ajusta estilos de Android.
 - **Expo Go no es un entorno de rendimiento.** Cualquier juicio sobre si una
   animación se siente bien tiene que hacerse en una build de release, en el
   Android más lento que haya a mano.
