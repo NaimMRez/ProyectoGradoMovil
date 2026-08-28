@@ -89,6 +89,18 @@ export function haceCuanto(fecha: Date, ahora = new Date()): string {
   return `${diaRelativo(fecha, ahora)} · ${hora(fecha)}`;
 }
 
+/**
+ * "17:35" si fue hoy, "Ayer" o "Mar 14" si no.
+ *
+ * Es la etiqueta de hora de la lista de conversaciones: dentro del mismo día
+ * interesa la hora, y a partir de ahí interesa el día — la hora exacta de un
+ * mensaje de hace tres semanas no le dice nada a nadie.
+ */
+export function horaODia(fecha: Date, ahora = new Date()): string {
+  const dia = diaRelativo(fecha, ahora);
+  return dia === 'Hoy' ? hora(fecha) : dia;
+}
+
 /** Inicio del día boliviano que contiene `fecha`, como instante UTC real. */
 export function inicioDelDia(fecha: Date): Date {
   const b = enBolivia(fecha);

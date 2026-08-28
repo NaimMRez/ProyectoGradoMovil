@@ -171,13 +171,26 @@ export function useInteresados(solicitudId: string | undefined) {
   });
 }
 
-export function useManifestarInteres() {
+/**
+ * El cuidador se ofrece a una solicitud.
+ *
+ * Manda su posición porque la distancia que ve el dueño en la lista de
+ * interesados se congela en ese momento: le importa dónde estaba el cuidador
+ * cuando dijo que sí, no dónde esté tres horas después.
+ */
+export function useManifestarInteres(punto: Punto | null = null) {
   const usuario = useUsuario();
   const invalidar = useInvalidarSolicitud();
   const { mostrar } = useToast();
 
   return useMutation({
-    mutationFn: (solicitudId: string) => api.manifestarInteres(solicitudId, usuario.id),
+    mutationFn: (solicitudId: string) =>
+      api.manifestarInteres(
+        solicitudId,
+        usuario.id,
+        'Estoy disponible para este paseo.',
+        punto,
+      ),
     onSuccess: ({ toast }, solicitudId) => {
       invalidar(solicitudId);
       mostrar(toast);

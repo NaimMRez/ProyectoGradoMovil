@@ -4,9 +4,8 @@ import { Rol } from '../../generated/prisma/enums.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { prisma } from '../../lib/prisma.js';
 import { asincrono, errorNoEncontrado } from '../../lib/errores.js';
-import { hora } from '../../lib/fechas.js';
+import { fechaHora, hora, horaODia } from '../../lib/fechas.js';
 import { bolivianos, codigoSolicitud, duracion, unirNombres } from '../../lib/texto.js';
-import { fechaHora } from '../../lib/fechas.js';
 import { exigirParticipante, tieneConversacion } from '../../domain/status.js';
 import { exigirSesion, sesionDe } from '../../middleware/auth.js';
 import { paramDe, validar } from '../../middleware/validar.js';
@@ -77,7 +76,7 @@ function serializarConversacion(
       fotoUrl: fila.mascotas[0]?.mascota.fotoUrl ?? null,
     },
     ultimoMensaje: ultimo?.texto ?? '',
-    horaEtiqueta: ultimo ? fechaHora(ultimo.creadoEn).split('· ')[1] ?? '' : '',
+    horaEtiqueta: ultimo ? horaODia(ultimo.creadoEn) : '',
     noLeidos,
     vinculoEtiqueta: `Solicitud ${codigo} · ${nombres}`,
   };

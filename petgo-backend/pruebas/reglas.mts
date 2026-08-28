@@ -34,7 +34,14 @@ import {
   primerNombre,
   unirNombres,
 } from '../src/lib/texto.js';
-import { diaRelativo, fechaHora, hora, inicioDelDia } from '../src/lib/fechas.js';
+import {
+  diaRelativo,
+  fechaHora,
+  haceCuanto,
+  hora,
+  horaODia,
+  inicioDelDia,
+} from '../src/lib/fechas.js';
 
 let ok = 0;
 const prueba = (nombre: string, fn: () => void) => {
@@ -330,6 +337,20 @@ prueba('"Hoy · 17:30" es la etiqueta de fecha principal', () => {
 prueba('el inicio del día boliviano son las 04:00 UTC', () => {
   const instante = new Date('2026-08-27T21:30:00.000Z');
   assert.equal(inicioDelDia(instante).toISOString(), '2026-08-27T04:00:00.000Z');
+});
+
+prueba('la lista de conversaciones muestra hora hoy y día si no', () => {
+  const referencia = new Date('2026-08-27T16:00:00.000Z'); // mediodía en Bolivia
+  assert.equal(horaODia(new Date('2026-08-27T21:35:00.000Z'), referencia), '17:35');
+  assert.equal(horaODia(new Date('2026-08-26T21:35:00.000Z'), referencia), 'Ayer');
+});
+
+prueba('la antigüedad de una notificación se lee en palabras', () => {
+  const ahora = new Date('2026-08-27T16:00:00.000Z');
+  assert.equal(haceCuanto(new Date('2026-08-27T15:55:00.000Z'), ahora), 'Hace 5 min');
+  assert.equal(haceCuanto(new Date('2026-08-27T13:00:00.000Z'), ahora), 'Hace 3 h');
+  assert.equal(haceCuanto(new Date('2026-08-27T15:59:40.000Z'), ahora), 'Ahora');
+  assert.match(haceCuanto(new Date('2026-08-25T13:00:00.000Z'), ahora), /· \d{2}:\d{2}$/);
 });
 
 console.log(`\n${ok} comprobaciones pasaron.\n`);

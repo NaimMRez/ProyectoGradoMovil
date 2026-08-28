@@ -2,7 +2,7 @@ import { EstadoServicio, Rol, TipoNotificacion } from '../../generated/prisma/en
 import { prisma } from '../../lib/prisma.js';
 import { errorNoEncontrado, errorProhibido, errorRegla } from '../../lib/errores.js';
 import { codigoSolicitud, primerNombre, unirNombres } from '../../lib/texto.js';
-import { fechaHora } from '../../lib/fechas.js';
+import { hora } from '../../lib/fechas.js';
 import {
   exigirPuedeCancelar,
   exigirPuedeConfirmar,
@@ -247,7 +247,7 @@ export async function avanzarEstado(
           usuarioId: solicitud.duenoId,
           tipo: TipoNotificacion.iniciado,
           titulo: `${primerNombre(cuidador.nombre)} marcó el paseo como iniciado`,
-          cuerpo: `Solicitud ${codigoSolicitud(solicitud.codigo)} · ${nombres} salieron a las ${fechaHora(new Date()).split('· ')[1]}.`,
+          cuerpo: `Solicitud ${codigoSolicitud(solicitud.codigo)} · ${nombres} salieron a las ${hora(new Date())}.`,
           solicitudId: id,
         },
       });

@@ -20,6 +20,7 @@ import { useManifestarInteres, useSolicitud } from '../../../src/api/hooks';
 import { USUARIOS } from '../../../src/api/mock/datos';
 import { puedeManifestarInteres, tieneConversacion } from '../../../src/api/estados';
 import { useUsuario } from '../../../src/estado/sesion';
+import { useUbicacion } from '../../../src/estado/ubicacion';
 import { borde, chrome, superficie, texto, verde } from '../../../src/theme/colors';
 import { espacio, profundidad, radio } from '../../../src/theme/layout';
 
@@ -75,10 +76,12 @@ export default function DetalleSolicitud() {
 
   const [sheetContacto, setSheetContacto] = useState(false);
 
-  const consulta = useSolicitud(id);
-  const interes = useManifestarInteres();
-
   const esDueno = usuario.rol === 'dueno';
+
+  const consulta = useSolicitud(id);
+  // El dueño no se ofrece a nada, así que no se le pide la ubicación aquí.
+  const ubicacion = useUbicacion();
+  const interes = useManifestarInteres(esDueno ? null : ubicacion.punto);
   const solicitud = consulta.data;
 
   if (consulta.isError) {

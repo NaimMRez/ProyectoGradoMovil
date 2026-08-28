@@ -374,6 +374,8 @@ export async function manifestarInteres(
   solicitudId: string,
   cuidadorId: string,
   mensaje = 'Estoy disponible para este paseo.',
+  /** Posición del cuidador, para congelar la distancia al punto de recogida. */
+  punto: Punto | null = null,
 ): Promise<{ toast: string }> {
   const cruda = buscarSolicitud(solicitudId);
 
@@ -389,7 +391,9 @@ export async function manifestarInteres(
     solicitudId,
     cuidadorId,
     mensaje,
-    metros: cruda.metros ?? 0,
+    metros: punto
+      ? distanciaEnMetros(origenDeBusqueda(punto).origen, { lat: cruda.lat, lng: cruda.lng })
+      : (cruda.metros ?? 0),
   });
 
   const dueno = usuario(cruda.duenoId);
