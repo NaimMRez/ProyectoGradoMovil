@@ -19,7 +19,7 @@ Proyecto de Grado · Ingeniería de Sistemas · UMSS.
 | Pantallas | **Las 18, navegables.** |
 | Capa de datos | Completa contra el adaptador mock. Un flag la apunta al backend real. |
 | Ubicación, foto, fecha, tiempo real | Completos. |
-| Backend (`petgo-backend/`) | Escrito y compilando. **Falta migrar contra una base con PostGIS.** |
+| Backend (`petgo-backend/`) | Completo. Migrado y sembrado contra PostgreSQL 18 + PostGIS 3.6. |
 
 La app **funciona hoy sin backend**: `src/api/mock/` implementa el mismo
 contrato contra un almacén en memoria, con los datos del seed y las reglas de
@@ -85,11 +85,18 @@ instalado; si algo falta, lo dice con el comando exacto en vez de fallar en la
 primera petición.
 
 ```bash
-npm run typecheck
-npm run pruebas               # 22 comprobaciones de las reglas del cliente
+npm run verificar             # typecheck + reglas + contrato
+npm run pruebas               # 24 comprobaciones de las reglas del cliente
+npm run pruebas:contrato      # las rutas de la app existen en el servidor
+npm run pruebas:humo          # 27 comprobaciones contra la API levantada
 npm run build && npm start    # compilado
 npm run db:studio             # explorador de la base
 ```
+
+`pruebas` y `pruebas:contrato` corren sin base de datos ni servidor.
+`pruebas:humo` necesita las dos cosas: recorre el flujo entero por HTTP —
+el cuidador rechazado con 409 mientras `awaitingConfirmation` está activo, el
+dueño cerrando el servicio, la consulta geoespacial ordenada por distancia.
 
 Para apuntar la app al backend real, cambia `USAR_MOCK` a `false` en
 `petgo-app/src/api/config.ts` y pon en `URL_BASE` la IP de tu máquina en la red
@@ -201,6 +208,18 @@ La consulta de solicitudes cercanas está en
 - Prisma no tiene tipo `geography`: las columnas `ubicacion` van como
   `Unsupported` y un trigger las mantiene sincronizadas desde `lat`/`lng`.
   **Nunca se escribe `ubicacion` desde Prisma.**
+
+Medido sobre 50.000 solicitudes sintéticas en esta misma base:
+
+| Consulta | Plan | Tiempo |
+| --- | --- | --- |
+| `ST_DWithin(...)` | `Bitmap Index Scan on requests_ubicacion_gix` | 18,0 ms |
+| `ST_Distance(...) < radio` | `Parallel Seq Scan on requests` | 29,4 ms |
+
+Las dos devuelven lo mismo. La segunda no puede usar el índice, así que la
+diferencia crece con la tabla: a 50.000 filas es un 60 % más lenta, y a un
+millón deja de ser utilizable. Se reproduce con `EXPLAIN (ANALYZE)` dentro de
+una transacción que se revierte.
 
 ### Dónde vive cada regla
 

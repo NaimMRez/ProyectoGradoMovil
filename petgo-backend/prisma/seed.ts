@@ -50,9 +50,10 @@ async function sembrar() {
   await prisma.mascota.deleteMany();
   await prisma.usuario.deleteMany();
 
-  // El correlativo visible vuelve a empezar donde el handoff, para que los
-  // códigos de la demostración coincidan con los de la documentación.
-  await prisma.$executeRawUnsafe('ALTER SEQUENCE "requests_codigo_seq" RESTART WITH 1038');
+  // Los códigos del seed se fijan a mano más abajo, así que la secuencia tiene
+  // que arrancar por encima del más alto: si no, la primera solicitud que
+  // publique un usuario chocaría contra el índice único de `codigo`.
+  await prisma.$executeRawUnsafe('ALTER SEQUENCE "requests_codigo_seq" RESTART WITH 1049');
 
   const claveHash = await bcrypt.hash(CLAVE, 12);
 
@@ -231,8 +232,17 @@ async function sembrar() {
 
   console.log('Solicitudes…');
 
-  /** Crea una solicitud con sus mascotas y su historial de estados. */
+  /**
+   * Crea una solicitud con sus mascotas y su historial de estados.
+   *
+   * El `codigo` se fija a mano en vez de dejarlo a la secuencia. El correlativo
+   * es visible — la app muestra "#1042" — y la documentación, el handoff y la
+   * demostración se refieren a solicitudes concretas por su número. Dejar que
+   * los asigne el orden de inserción haría que cualquier reordenación del seed
+   * desincronizara los papeles del proyecto respecto a la base.
+   */
   async function crearSolicitud(datos: {
+    codigo: number;
     duenoId: string;
     cuidadorId?: string;
     mascotaIds: string[];
@@ -251,6 +261,7 @@ async function sembrar() {
   }) {
     return prisma.solicitud.create({
       data: {
+        codigo: datos.codigo,
         duenoId: datos.duenoId,
         cuidadorId: datos.cuidadorId ?? null,
         fechaHora: datos.fechaHora,
@@ -278,6 +289,7 @@ async function sembrar() {
   // Diego ya marcó el fin del paseo. El estado sigue en `proceso` y
   // `awaitingConfirmation` está activo: sólo Camila puede cerrarlo.
   const s1042 = await crearSolicitud({
+    codigo: 1042,
     duenoId: camila.id,
     cuidadorId: diego.id,
     mascotaIds: [rocco.id, luna.id],
@@ -299,8 +311,9 @@ async function sembrar() {
     ],
   });
 
-  // ── #1039 · Aceptada, esperando el día ────────────────────────────────────
-  const s1039 = await crearSolicitud({
+  // ── #1041 · Aceptada, esperando el día ────────────────────────────────────
+  const s1041 = await crearSolicitud({
+    codigo: 1041,
     duenoId: camila.id,
     cuidadorId: ana.id,
     mascotaIds: [momo.id],
@@ -321,6 +334,7 @@ async function sembrar() {
 
   // ── #1040 · Publicada, con tres cuidadores interesados ────────────────────
   const s1040 = await crearSolicitud({
+    codigo: 1040,
     duenoId: camila.id,
     mascotaIds: [rocco.id],
     fechaHora: enDias(2, 18, 0),
@@ -335,8 +349,9 @@ async function sembrar() {
     eventos: [{ estado: EstadoServicio.publicada, haceMin: 5 }],
   });
 
-  // ── #1041 · Finalizada, para que el historial no esté vacío ───────────────
+  // ── #1039 · Finalizada, para que el historial no esté vacío ───────────────
   await crearSolicitud({
+    codigo: 1039,
     duenoId: camila.id,
     cuidadorId: diego.id,
     mascotaIds: [luna.id],
@@ -357,8 +372,9 @@ async function sembrar() {
     ],
   });
 
-  // ── #1043 · Cancelada ─────────────────────────────────────────────────────
+  // ── #1038 · Cancelada ─────────────────────────────────────────────────────
   await crearSolicitud({
+    codigo: 1038,
     duenoId: camila.id,
     mascotaIds: [luna.id],
     fechaHora: enDias(-6, 9, 0),
@@ -379,6 +395,7 @@ async function sembrar() {
   // Coordenadas reales del Cercado, tomadas del handoff.
   const publicadas: Parameters<typeof crearSolicitud>[0][] = [
     {
+      codigo: 1045,
       duenoId: mariana.id,
       mascotaIds: [kira.id],
       fechaHora: enDias(1, 7, 30),
@@ -393,6 +410,7 @@ async function sembrar() {
       eventos: [{ estado: EstadoServicio.publicada, haceMin: 60 }],
     },
     {
+      codigo: 1047,
       duenoId: javier.id,
       mascotaIds: [toby.id, nala.id],
       fechaHora: enDias(1, 17, 0),
@@ -407,6 +425,7 @@ async function sembrar() {
       eventos: [{ estado: EstadoServicio.publicada, haceMin: 180 }],
     },
     {
+      codigo: 1048,
       duenoId: mariana.id,
       mascotaIds: [bruno.id],
       fechaHora: enDias(2, 9, 0),
@@ -420,6 +439,7 @@ async function sembrar() {
       eventos: [{ estado: EstadoServicio.publicada, haceMin: 720 }],
     },
     {
+      codigo: 1046,
       duenoId: javier.id,
       mascotaIds: [toby.id],
       fechaHora: enDias(0, 19, 0),
@@ -491,7 +511,7 @@ async function sembrar() {
 
   await prisma.mensaje.create({
     data: {
-      solicitudId: s1039.id,
+      solicitudId: s1041.id,
       autorId: ana.id,
       texto: 'Perfecto, mañana 08:00 en la puerta.',
       creadoEn: haceMinutos(1_450),
@@ -536,8 +556,8 @@ async function sembrar() {
         usuarioId: camila.id,
         tipo: TipoNotificacion.aceptado,
         titulo: 'Ana Peredo aceptó el paseo de Momo',
-        cuerpo: 'Solicitud #1039 · mañana a las 08:00 en Calle Bolívar #340.',
-        solicitudId: s1039.id,
+        cuerpo: 'Solicitud #1041 · mañana a las 08:00 en Calle Bolívar #340.',
+        solicitudId: s1041.id,
         leida: true,
         creadoEn: haceMinutos(1_456),
       },
@@ -554,13 +574,17 @@ async function sembrar() {
   });
 
   const solicitudes = await prisma.solicitud.count();
+  const codigos = await prisma.solicitud.findMany({
+    select: { codigo: true },
+    orderBy: { codigo: 'asc' },
+  });
 
   console.log(`
 Listo.
 
   Usuarios      6
   Mascotas      7
-  Solicitudes   ${solicitudes}
+  Solicitudes   ${solicitudes} · ${codigos.map((c) => `#${c.codigo}`).join(' ')}
 
   Contraseña de todas las cuentas: ${CLAVE}
 
@@ -568,9 +592,9 @@ Listo.
     Cuidador    diego.r@gmail.com
     Cuidadora   ana.p@gmail.com
 
-  La solicitud de Rocco y Luna quedó en 'proceso' con awaitingConfirmation
-  activo. Entra como Camila, abre Notificaciones y pulsa "Confirmar": ése es
-  el caso que demuestra la regla del cliente.
+  La #1042 (Rocco y Luna) quedó en 'proceso' con awaitingConfirmation activo.
+  Entra como Camila, abre Notificaciones y pulsa "Confirmar": ése es el caso
+  que demuestra la regla del cliente.
 `);
 }
 

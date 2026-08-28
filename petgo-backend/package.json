@@ -15,7 +15,9 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force",
-    "pruebas:humo": "tsx pruebas/humo.mts"
+    "pruebas:humo": "tsx pruebas/humo.mts",
+    "pruebas:contrato": "tsx pruebas/contrato.mts",
+    "verificar": "npm run typecheck && npm run pruebas && npm run pruebas:contrato"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
