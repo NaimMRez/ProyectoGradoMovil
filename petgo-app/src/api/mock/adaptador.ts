@@ -125,6 +125,8 @@ export async function registrar(datos: {
   nombre: string;
   correo: string;
   telefono: string;
+  /// El adaptador no autentica: acepta la contraseña para igualar la firma del cliente HTTP.
+  clave: string;
   rol: Rol;
 }): Promise<Usuario> {
   const primerNombre = datos.nombre.trim().split(/\s+/)[0] || datos.nombre;

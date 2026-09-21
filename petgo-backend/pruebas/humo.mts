@@ -97,6 +97,37 @@ async function correr() {
   assert.equal(sinToken.estado, 401);
   paso('sin token no se accede a nada');
 
+  // ── 1b · Registro con el mismo cuerpo que manda la app ──────────────────
+  // Este bloque existe porque la pantalla de registro llegó a validar la
+  // contraseña sin enviarla: contra el adaptador en memoria funcionaba y contra
+  // el servidor devolvía 400. La prueba manda exactamente los campos de la app.
+  const correoNuevo = `prueba.${Date.now()}@petgo.test`;
+  const registro = await pedir<Sesion>('POST', '/auth/register', {
+    cuerpo: {
+      nombre: 'Prueba De Humo',
+      correo: correoNuevo,
+      telefono: '70000000',
+      clave: 'petgo1234',
+      rol: 'cuidador',
+    },
+  });
+  assert.equal(registro.estado, 201, JSON.stringify(registro.cuerpo));
+  assert.equal(registro.cuerpo.usuario.paseosCompletados, 0);
+  assert.ok(registro.cuerpo.token);
+  paso('el registro crea la cuenta, arranca en cero paseos y devuelve token');
+
+  const sinClave = await pedir<Error_>('POST', '/auth/register', {
+    cuerpo: { nombre: 'Sin Clave', correo: `b.${correoNuevo}`, telefono: '70000000', rol: 'dueno' },
+  });
+  assert.equal(sinClave.estado, 400);
+  paso('un registro sin contraseña se rechaza con 400');
+
+  const repetido = await pedir<Error_>('POST', '/auth/register', {
+    cuerpo: { nombre: 'Otra Vez', correo: correoNuevo, telefono: '70000000', clave: 'petgo1234', rol: 'dueno' },
+  });
+  assert.equal(repetido.estado, 409);
+  paso('un correo ya registrado se rechaza con 409');
+
   // ── 2 · Sus solicitudes ──────────────────────────────────────────────────
   const mias = await pedir<Solicitud[]>('GET', '/requests', { token: camila });
   assert.equal(mias.estado, 200);

@@ -23,6 +23,7 @@ type ContextoSesion = {
     nombre: string;
     correo: string;
     telefono: string;
+    clave: string;
     rol: Rol;
   }) => Promise<Usuario>;
   salir: () => Promise<void>;

@@ -133,7 +133,7 @@ export default function Registro() {
 
     setEnviando(true);
     try {
-      const usuario = await registrarse({ nombre, correo, telefono, rol });
+      const usuario = await registrarse({ nombre, correo, telefono, clave, rol });
       router.replace(inicioSegunRol(usuario.rol));
     } catch (fallo) {
       mostrar(

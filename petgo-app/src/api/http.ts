@@ -116,7 +116,7 @@ export async function registrar(datos: {
   correo: string;
   telefono: string;
   rol: Rol;
-  clave?: string;
+  clave: string;
 }): Promise<Usuario> {
   const { usuario, token: nuevo } = await pedir<{ usuario: Usuario; token: string }>(
     'POST',
