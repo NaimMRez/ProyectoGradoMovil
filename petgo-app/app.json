@@ -7,19 +7,17 @@
     "icon": "./assets/icon.png",
     "scheme": "petgo",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "backgroundColor": "#f7fbf8",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "bo.edu.umss.petgo",
       "infoPlist": {
         "CADisableMinimumFrameDurationOnPhone": true,
-        "NSLocationWhenInUseUsageDescription": "PetGo usa tu ubicaci\u00f3n para mostrarte los paseos cercanos y calcular la distancia hasta el punto de recogida."
+        "NSLocationWhenInUseUsageDescription": "PetGo usa tu ubicación para mostrarte los paseos cercanos y calcular la distancia hasta el punto de recogida."
       }
     },
     "android": {
       "package": "bo.edu.umss.petgo",
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
         "backgroundColor": "#1b683e",
@@ -52,7 +50,10 @@
           "imageWidth": 140,
           "resizeMode": "contain"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-image",
+      "expo-status-bar"
     ]
   }
 }

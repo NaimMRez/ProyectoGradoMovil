@@ -290,7 +290,7 @@ propósito.
 
 ## Stack
 
-- **Móvil:** React Native 0.81 · Expo SDK 54 · TypeScript · expo-router ·
+- **Móvil:** React Native 0.86 · Expo SDK 57 · TypeScript · expo-router ·
   TanStack Query · Reanimated 4 · react-native-maps con tiles de CartoDB Positron.
 - **Backend:** Node · Express · Prisma · Zod · Socket.io.
 - **Base de datos:** PostgreSQL + PostGIS.
@@ -304,10 +304,14 @@ proyecto** y qué módulos nativos están disponibles.
 
 ### El SDK lo fija Expo Go, no el proyecto
 
-**El proyecto está en SDK 54 porque es el SDK que soporta el Expo Go publicado
-en la App Store.** No es una elección de comodidad: Expo Go admite un solo SDK
-a la vez, y un proyecto por delante de esa versión no abre en ningún iPhone,
-por nuevo que sea el teléfono o el iOS.
+**El proyecto está en SDK 57 porque es el SDK que soporta el Expo Go publicado
+en la App Store** (57.0.9, desde el 2 de septiembre de 2026). No es una elección
+de comodidad: Expo Go admite un solo SDK a la vez, y un proyecto por delante
+**o por detrás** de esa versión no abre en ningún iPhone, por nuevo que sea el
+teléfono o el iOS. Este proyecto ya lo sufrió en los dos sentidos: nació en SDK
+57, bajó a 54 en agosto porque la tienda tenía la 54.0.2, y volvió a 57 en
+septiembre cuando la tienda actualizó. En iOS no se puede instalar un Expo Go
+anterior; en Android sí, con el APK de expo.dev/go.
 
 Antes de subir de SDK hay que comprobar qué hay publicado de verdad, y no
 fiarse del `iosClientVersion` que devuelve la API de Expo — ése es su build
@@ -327,7 +331,7 @@ justamente lo que el cliente no quiso.
 Lo que trae Expo Go está en `expo/bundledNativeModules.json` del propio
 proyecto. Conviene verificar caso por caso antes de dar nada por perdido:
 
-- **`react-native-keyboard-controller` sí está en Expo Go desde el SDK 54.**
+- **`react-native-keyboard-controller` sí está en Expo Go desde el SDK 54 (y sigue en el 57).**
   El brief lo daba por perdido y aceptaba conformarse con el
   `KeyboardAvoidingView` de React Native. El chat usa el de la librería, que
   sigue la posición real del teclado fotograma a fotograma en el hilo de UI.
