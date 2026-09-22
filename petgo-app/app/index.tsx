@@ -53,7 +53,7 @@ function Punto({ retraso }: { retraso: number }) {
  * Splash.
  *
  * Se queda mientras se lee la sesión guardada y sale solo: si hay usuario, a
- * la pantalla de inicio de su rol; si no, al onboarding. El botón "Continuar"
+ * la pantalla de inicio de su rol; si no, a la portada. El botón "Continuar"
  * del prototipo no existe aquí — estaba sólo para poder navegar en el
  * navegador.
  */
@@ -66,7 +66,7 @@ export default function Splash() {
     // Un mínimo de permanencia: sin él, en un teléfono rápido el splash
     // parpadea durante 80 ms y se lee como un fallo de arranque.
     const salida = setTimeout(() => {
-      router.replace(usuario ? inicioSegunRol(usuario.rol) : '/onboarding');
+      router.replace(usuario ? inicioSegunRol(usuario.rol) : '/bienvenida');
     }, 900);
 
     return () => clearTimeout(salida);

@@ -90,6 +90,7 @@ export default function LayoutRaiz() {
                     {/* Splash y acceso: sin gesto de volver atrás, porque no hay
                         dónde volver. */}
                     <Stack.Screen name="index" options={{ animation: 'fade' }} />
+                    <Stack.Screen name="bienvenida" options={{ gestureEnabled: false }} />
                     <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
                     <Stack.Screen name="login" options={{ gestureEnabled: false }} />
                     <Stack.Screen name="registro" />
