@@ -95,7 +95,7 @@ export default function Splash() {
               borderRadius: radio.logo,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: '#f4faf4',
+              backgroundColor: superficie.apagada,
             },
             profundidad.logo,
           ]}

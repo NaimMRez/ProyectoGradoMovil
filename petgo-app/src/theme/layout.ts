@@ -83,7 +83,7 @@ const sombra = (
   radioSombra: number,
   opacidad: number,
   elevation: number,
-  color = '#142819',
+  color = '#2a2418',
 ): ViewStyle =>
   Platform.select<ViewStyle>({
     ios: {
@@ -108,23 +108,23 @@ export const profundidad = {
   /** Bottom sheet. La sombra sube, no baja. */
   sheet: Platform.select<ViewStyle>({
     ios: {
-      shadowColor: '#142819',
+      shadowColor: '#2a2418',
       shadowOffset: { width: 0, height: -6 },
       shadowOpacity: 0.18,
       shadowRadius: 32,
     },
-    android: { elevation: 24, shadowColor: '#142819' },
+    android: { elevation: 24, shadowColor: '#2a2418' },
     default: {},
   })!,
   /** Banda de lista que se solapa sobre el mapa en el inicio del cuidador. */
   banda: Platform.select<ViewStyle>({
     ios: {
-      shadowColor: '#142819',
+      shadowColor: '#2a2418',
       shadowOffset: { width: 0, height: -8 },
       shadowOpacity: 0.14,
       shadowRadius: 20,
     },
-    android: { elevation: 16, shadowColor: '#142819' },
+    android: { elevation: 16, shadowColor: '#2a2418' },
     default: {},
   })!,
   /** Toast. Superficie oscura, así que la sombra tiene que ser más densa. */
@@ -132,11 +132,11 @@ export const profundidad = {
   /** Marcador de precio sobre el mapa. */
   marcador: sombra(3, 8, 0.3, 6, '#000000'),
   /** Botón principal: la sombra es verde, no gris. */
-  botonPrimario: sombra(8, 16, 0.3, 6, '#1b683e'),
+  botonPrimario: sombra(8, 16, 0.3, 6, '#2b8164'),
   /** Botón de WhatsApp en el sheet de contacto. */
   botonWhatsapp: sombra(8, 16, 0.3, 6, '#3a9742'),
   /** CTA de publicación y héroe del detalle. */
-  heroe: sombra(12, 26, 0.26, 8, '#0d4a2b'),
+  heroe: sombra(12, 26, 0.26, 8, '#14543f'),
   /** Logo del splash sobre el degradado oscuro. */
   logo: sombra(14, 32, 0.4, 12, '#000000'),
 } as const;
@@ -155,7 +155,7 @@ export const medida = {
   /** Asa de un bottom sheet. */
   asa: { width: 38, height: 4 },
   /** Barra de tabs sin el área segura inferior. */
-  alturaTabs: 58,
+  alturaTabs: 74,
   /** Píldora tras el icono del tab activo. */
   pildoraTab: { width: 56, height: 30 },
 } as const;

@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useReducedMotion } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { tabs as coloresTabs } from '../theme/colors';
-import { espacio, medida, radio } from '../theme/layout';
+import { espacio, medida, profundidad, radio } from '../theme/layout';
 import { curvaCSS, duracion } from '../theme/motion';
 import Icono, { type NombreIcono } from './Icono';
 import PressableScale from './PressableScale';
@@ -54,6 +54,18 @@ export type TabBarProps = {
  * 400 a 600, pero en React Native eso es cambiar de archivo de fuente, y DM
  * Sans 600 es más ancha que la 400: la etiqueta salta de ancho en cada toque.
  * El color y la píldora ya distinguen el tab activo de sobra.
+ *
+ * **La barra es oscura y flota, separada de los bordes.** Sobre un fondo
+ * blanco, una barra clara pegada al borde inferior no se distingue del
+ * contenido. La referencia de diseño resuelve esto con una barra oscura
+ * redondeada, y de ahí viene la forma.
+ *
+ * De esa referencia **no** se toma una cosa: allí el tab activo despliega su
+ * etiqueta y los inactivos quedan en icono suelto. Con cuatro tabs y etiquetas
+ * como "Solicitudes" y "Servicios", esa píldora no cabe en su cuarto de barra,
+ * así que los tabs tendrían que repartirse el ancho de nuevo en cada toque —
+ * y esto pasa más de cien veces al día. Las etiquetas se quedan siempre
+ * visibles: se gana la forma de la referencia sin pagar el salto.
  */
 export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
   const insets = useSafeAreaInsets();
@@ -65,11 +77,12 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
       style={{
         flexDirection: 'row',
         backgroundColor: coloresTabs.fondo,
-        borderTopWidth: 1,
-        borderTopColor: coloresTabs.borde,
-        paddingTop: espacio.lg,
-        paddingHorizontal: espacio.md,
-        paddingBottom: espacio.xl + insets.bottom,
+        borderRadius: radio.sheet,
+        marginHorizontal: espacio['4xl'],
+        marginBottom: espacio.lg + insets.bottom,
+        paddingVertical: espacio.lg,
+        paddingHorizontal: espacio.sm,
+        ...profundidad.nivel3,
       }}
     >
       {items.map((item) => {
@@ -101,7 +114,7 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
                 {
                   width: medida.pildoraTab.width,
                   height: medida.pildoraTab.height,
-                  borderRadius: radio.md,
+                  borderRadius: radio.pastilla,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: esActivo ? coloresTabs.pildora : 'transparent',

@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../src/components/Button';
 import Icono from '../src/components/Icono';
 import Texto from '../src/components/Texto';
-import { ambar, arena, superficie, texto, verde } from '../src/theme/colors';
+import { arena, superficie, texto, verde } from '../src/theme/colors';
 import { espacio, radio } from '../src/theme/layout';
 import { curvaCSS, duracion } from '../src/theme/motion';
 
@@ -52,14 +52,16 @@ const COLUMNAS: Columna[] = [
   {
     nombre: 'Milo',
     foto: require('../assets/milo.png'),
-    banda: ambar.fondo,
+    banda: superficie.seleccion,
     circulo: superficie.tarjeta,
     factor: 0.72,
   },
   {
     nombre: 'Pepa',
+    // El beige de marca cierra la fila. Las dos bandas verde claro quedan
+    // separadas por la verde fuerte a propósito: juntas se leerían como una.
     foto: require('../assets/pepa.png'),
-    banda: superficie.seleccion,
+    banda: superficie.aviso,
     circulo: superficie.tarjeta,
     factor: 0.54,
   },

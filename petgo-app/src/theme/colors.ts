@@ -1,118 +1,141 @@
 /**
- * Paleta de PetGo — verde bosque + arena.
+ * Paleta de PetGo — blanco, beige y verde.
  *
- * Todos los valores salen de una conversión exacta OKLCH → sRGB de los tokens
- * del handoff. La tabla de hex del handoff original está desviada (sus hex son
- * bastante más apagados que el OKLCH que dice representar) y no se usa.
+ * Regla: ningún componente escribe un hex suelto. Todo pasa por aquí. Por eso
+ * repintar las 21 pantallas es editar este archivo y poco más.
  *
- * Regla: ningún componente escribe un hex suelto. Todo pasa por aquí.
+ * **Cuatro capas de superficie, no dos.** El fondo es blanco y las tarjetas
+ * también: lo que las separa es el borde, no el relleno. Por debajo de ambos
+ * hay dos niveles cálidos — un beige claro para campos y paneles de apoyo, y
+ * el beige de marca para el panel que tiene que destacar. Esa cuarta capa es
+ * la que permite que una ficha de datos se distinga de la tarjeta que la
+ * contiene sin recurrir a otra sombra.
+ *
+ * El verde aparece en dos intensidades y no es decorativo en ninguna: el
+ * saturado lleva las acciones, el claro tiñe píldoras y chips. Ningún elemento
+ * usa uno donde toca el otro.
+ *
+ * Cada par de colores que se toca está verificado en `pruebas/contraste.mjs`.
  */
 
 /** Verdes de marca. `primario` es el color de acción de toda la app. */
 export const verde = {
-  primario: '#1b683e',
+  primario: '#2b8164',
   /** Fin de los degradados de héroe y del CTA de publicación. */
-  profundo: '#004127',
+  profundo: '#14543f',
   /** Inicio del degradado de héroe (detalle, CTA). */
-  heroe: '#136239',
+  heroe: '#226b53',
   /** Estado presionado / enlaces visitados. */
-  hover: '#07502c',
-  /** Texto sobre superficies claras cuando el primario es demasiado pesado. */
-  texto: '#115531',
-  enlace: '#236e44',
-  splashInicio: '#185b37',
-  splashFin: '#033d26',
+  hover: '#1f6149',
+  /**
+   * Texto sobre superficies claras cuando el primario es demasiado pesado.
+   *
+   * No sigue a `primario`: el primario sobre blanco da 4,7:1, que basta para un
+   * botón y no para un párrafo. Estos dos se eligen por contraste, no por
+   * armonía.
+   */
+  texto: '#14523f',
+  enlace: '#1c6349',
+  splashInicio: '#2b8164',
+  splashFin: '#123f30',
 } as const;
 
-/**
- * Acceso — los dos colores de la pantalla de elección de rol.
- *
- * Son más claros y más saturados que `verde` y `arena`, y existen sólo aquí:
- * es la única pantalla donde un color ocupa la superficie entera y tiene que
- * sostenerse solo, sin tarjetas ni texto encima que lo rompan. El verde de la
- * marca (`verde.primario`) a pantalla completa se lee como una pantalla de
- * error; éste, no.
- *
- * El criterio es el mismo que justifica `arena`: una familia que se define por
- * dónde se usa, no por qué tono es. Fuera de las pantallas de acceso, ninguno
- * de los dos debe aparecer.
- */
-export const acceso = {
-  verde: '#2b8164',
-  crema: '#f4e7c2',
-  /** Texto y bordes sobre el verde. */
-  sobreVerde: '#ffffff',
-  sobreVerdeSuave: 'rgba(255,255,255,0.76)',
-  /** Texto sobre el crema. */
-  sobreCrema: '#1c4c3b',
-  sobreCremaSuave: '#4a6659',
-} as const;
-
-/**
- * Arena — el neutro cálido que el handoff prometió en la paleta ("verde bosque
- * + arena") pero nunca llegó a usar. Aparece solo en superficies de reposo:
- * estados vacíos, skeletons y el fondo de las pantallas de acceso. Sin él la
- * app entera es una sola gama de verde-gris y las zonas sin contenido se leen
- * como error de carga en vez de como calma.
- */
+/** Arena — superficies de reposo: estados vacíos y pantallas de acceso. */
 export const arena = {
-  fondo: '#faf8f4',
-  superficie: '#f5f1e9',
-  borde: '#e8e1d4',
-  texto: '#6b6355',
+  fondo: '#f8f3e6',
+  superficie: '#f4e6c3',
+  borde: '#e2d5b4',
+  texto: '#6a6252',
 } as const;
 
-/** Superficies y fondos. */
+/** Superficies y fondos, de la más clara a la más profunda. */
 export const superficie = {
-  app: '#f7fbf8',
-  lienzo: '#edf2ed',
+  /** Fondo general. Blanco: el lienzo, no un tono. */
+  app: '#ffffff',
+  /** Tarjeta. También blanca — la separa el borde, no el relleno. */
   tarjeta: '#ffffff',
   /** Superficie de un elemento ya consumido (notificación leída). */
-  apagada: '#f5f9f6',
-  /** Fondo de inputs y burbujas de chat ajenas. */
-  hundida: '#f2f6f3',
-  burbuja: '#f1f7f2',
+  apagada: '#f8f3e6',
+  /** Fondo de inputs y de la barra de escritura. */
+  hundida: '#f6f0e2',
+  burbuja: '#f6f0e2',
+  /** Beige de apoyo, para separar bloques dentro de una tarjeta. */
+  lienzo: '#efe6d2',
   /** Tinte de selección: tarjeta de rol o de mascota elegida. */
-  seleccion: '#e7f7e9',
+  seleccion: '#dcefe1',
   /** Tinte de la píldora del tab activo y de chips informativos. */
-  pildora: '#dcf2df',
-  /** Tinte de avisos y tarjetas de resumen. */
-  aviso: '#edf6ee',
+  pildora: '#d3e9d9',
+  /**
+   * Beige de marca. Es el panel que tiene que destacar sobre la tarjeta que lo
+   * contiene: resúmenes, fichas de datos, avisos sin urgencia.
+   */
+  aviso: '#f4e6c3',
   /** Tarjeta de interesados (dueño). */
-  destacada: '#ebf8ec',
+  destacada: '#eaf4ec',
   /** Recuadro de estadística sobre fondo claro. */
-  estadistica: '#f0f8f1',
+  estadistica: '#f7f1e3',
 } as const;
 
-/** Escala de texto, de más a menos contraste. */
+/**
+ * Escala de texto, de más a menos contraste.
+ *
+ * Los tonos medios son más oscuros de lo que pedirían sobre blanco. El motivo
+ * es el beige: los paneles de marca llevan texto encima, y sobre `#f4e6c3` los
+ * grises claros de una escala pensada para blanco se caen por debajo del
+ * mínimo legible. La escala se calibra contra la superficie más exigente en la
+ * que aparece, no contra la más fácil.
+ */
 export const texto = {
-  principal: '#132419',
+  principal: '#17251b',
   tarjeta: '#1a251d',
   fuerte: '#18281e',
   medio: '#212c25',
-  secundario: '#5b675e',
-  terciario: '#69756c',
-  suave: '#6c786f',
-  tenue: '#717e75',
-  atenuado: '#7f8982',
-  etiqueta: '#4d5950',
-  inactivo: '#a0a6a2',
+  secundario: '#4d594f',
+  terciario: '#55625a',
+  suave: '#58655c',
+  tenue: '#5c6a60',
+  atenuado: '#5e6b62',
+  etiqueta: '#454f47',
+  inactivo: '#8a938c',
   sobrePrimario: '#ffffff',
   /** Texto secundario sobre degradado verde (héroe, CTA, splash). */
-  sobreHeroe: '#c6e2ce',
+  sobreHeroe: '#c9e6d5',
 } as const;
 
-/** Bordes y divisores, del más visible al más sutil. */
+/**
+ * Bordes y divisores, del más visible al más sutil.
+ *
+ * Grises cálidos, no beiges saturados. Con tarjeta y fondo los dos blancos, el
+ * borde es lo único que dibuja la tarjeta: tiene que verse sin teñirla.
+ */
 export const borde = {
-  tarjeta: '#e1e6e2',
-  input: '#d9e0db',
-  suave: '#dbe4de',
-  sutil: '#e7ede9',
-  divisor: '#ebf0ed',
-  divisorTenue: '#eff3f0',
-  aviso: '#e1ebe3',
-  destacada: '#d1e4d4',
-  discontinuo: '#afc4b5',
+  tarjeta: '#e6e0d2',
+  input: '#ded7c6',
+  suave: '#e0dacb',
+  sutil: '#ebe6da',
+  divisor: '#eee9df',
+  divisorTenue: '#f2eee6',
+  aviso: '#e2d3ab',
+  destacada: '#cadfd0',
+  discontinuo: '#b5ac95',
+} as const;
+
+/**
+ * Acceso — los colores de la pantalla de elección de rol, a sangre.
+ *
+ * No es una paleta aparte: son los dos colores de la marca ocupando la
+ * pantalla entera. La familia existe sólo para documentar qué tinta va sobre
+ * cada uno cuando no hay tarjeta de por medio que rompa el color.
+ */
+export const acceso = {
+  verde: verde.primario,
+  crema: superficie.aviso,
+  /** Texto y bordes sobre el verde. */
+  sobreVerde: '#ffffff',
+  sobreVerdeSuave: 'rgba(255,255,255,0.78)',
+  /** Texto sobre el crema. */
+  sobreCrema: verde.texto,
+  sobreCremaSuave: texto.secundario,
 } as const;
 
 /** Colores de intención. */
@@ -121,28 +144,34 @@ export const intencion = {
   whatsapp: '#3a9742',
   destructivo: '#a45953',
   destructivoTexto: '#a34945',
-  destructivoBorde: '#f2d7d4',
-  destructivoFondo: '#ffe7e4',
+  destructivoBorde: '#eecfc9',
+  destructivoFondo: '#fbdfd9',
   noLeidas: '#bd4334',
   puntoNoLeida: '#00884b',
 } as const;
 
-/** Aviso ámbar: "el cuidador terminó, falta que el dueño confirme". */
+/**
+ * Aviso ámbar: "el cuidador terminó, falta que el dueño confirme".
+ *
+ * Va más saturado que el beige de marca a propósito. Los dos son cálidos y
+ * pueden coincidir en pantalla; si el ámbar fuera igual de suave, el único
+ * aviso que exige una acción se leería como un panel informativo más.
+ */
 export const ambar = {
-  fondo: '#fff3d8',
-  borde: '#f8d9aa',
-  icono: '#9c5400',
+  fondo: '#f9d996',
+  borde: '#dda63f',
+  icono: '#7a4100',
   titulo: '#4e3014',
-  cuerpo: '#674c35',
+  cuerpo: '#63482f',
   /** Paso actual del timeline de seguimiento. */
-  actualFondo: '#ffeac2',
-  actualBorde: '#d8953d',
-  actualIcono: '#8c4a00',
+  actualFondo: '#f8d28c',
+  actualBorde: '#c98b2c',
+  actualIcono: '#7d4200',
 } as const;
 
 /** Toast: superficie oscura, el único elemento con inversión de contraste. */
 export const toast = {
-  fondo: '#182f20',
+  fondo: '#17301f',
   texto: '#ffffff',
   icono: '#95d7a2',
 } as const;
@@ -184,21 +213,29 @@ export const notificacion: Record<
   cancelada: { fondo: '#ffe7e4', icono: '#a03f3c' },
 };
 
-/** Barra de tabs. */
+/**
+ * Barra de tabs: oscura y flotante sobre el contenido.
+ *
+ * Es la única superficie oscura permanente de la app. Sobre un fondo blanco,
+ * una barra clara pegada al borde inferior desaparece; oscura y separada del
+ * borde, se lee como un objeto que flota, y el verde de la píldora activa
+ * destaca sin necesitar más contraste del que ya tiene.
+ */
 export const tabs = {
-  activo: '#07502c',
-  inactivo: '#747d76',
-  pildora: superficie.pildora,
-  fondo: superficie.tarjeta,
-  borde: borde.divisor,
+  fondo: '#16261c',
+  /** Icono y etiqueta sobre la píldora verde. */
+  activo: '#ffffff',
+  inactivo: '#9fada4',
+  pildora: verde.primario,
+  borde: 'transparent',
 } as const;
 
 /** Elementos que flotan sobre el mapa o dentro de sheets. */
 export const chrome = {
   sobreMapa: 'rgba(255,255,255,0.96)',
-  backdrop: 'rgba(18,32,26,0.42)',
-  asa: '#d9e0db',
-  cerrar: '#eff3f0',
+  backdrop: 'rgba(24,26,18,0.44)',
+  asa: borde.input,
+  cerrar: '#f2eee6',
   /** Superficies translúcidas dentro del héroe verde. */
   sobreHeroe: 'rgba(255,255,255,0.14)',
   sobreHeroeFuerte: 'rgba(255,255,255,0.20)',
@@ -206,18 +243,19 @@ export const chrome = {
 
 /** Estados vacíos y placeholders de foto. */
 export const vacio = {
-  fondo: '#ecf4ee',
-  borde: '#e3eae4',
-  icono: '#84988a',
-  titulo: '#263129',
+  fondo: '#f8f3e6',
+  borde: '#ece3cd',
+  icono: '#8f8875',
+  titulo: '#262b22',
   /** Fondo de un hueco de foto sin imagen todavía. */
-  fotoFondo: '#dcede1',
-  fotoBorde: '#dae4dd',
-  fotoTexto: '#5b675e',
+  fotoFondo: '#f0e8d4',
+  fotoBorde: '#e3d9bf',
+  fotoTexto: '#5d5647',
 } as const;
 
 export const colores = {
   verde,
+  acceso,
   arena,
   superficie,
   texto,

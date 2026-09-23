@@ -44,7 +44,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "pruebas": "node --experimental-strip-types --no-warnings pruebas/reglas.mts"
+    "pruebas": "node --experimental-strip-types --no-warnings pruebas/reglas.mts",
+    "contraste": "node pruebas/contraste.mjs"
   },
   "private": true
 }
