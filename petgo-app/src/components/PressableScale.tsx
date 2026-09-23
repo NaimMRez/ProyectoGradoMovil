@@ -1,4 +1,4 @@
-import { forwardRef, useCallback } from 'react';
+import { forwardRef, useCallback, type ComponentProps } from 'react';
 import {
   Pressable,
   type PressableProps,
@@ -37,6 +37,14 @@ export type PressableScaleProps = Omit<PressableProps, 'style'> & {
   haptico?: false | 'ligero' | 'medio' | 'exito' | 'error';
   /** Desactiva la escala y deja sólo el `Pressable`. */
   sinEscala?: boolean;
+  /**
+   * Animación de cambio de tamaño o posición, de Reanimated.
+   *
+   * Se reenvía tal cual al componente animado. Existe para que una superficie
+   * pulsable que cambia de ancho — la píldora del tab activo — pueda morfear
+   * sin envolverla en otra vista, que rompería el reparto del ancho.
+   */
+  layout?: ComponentProps<typeof Animated.View>['layout'];
 };
 
 const VIBRACION = {

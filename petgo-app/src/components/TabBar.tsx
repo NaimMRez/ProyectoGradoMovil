@@ -1,10 +1,14 @@
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useReducedMotion } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  LinearTransition,
+  useReducedMotion,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { tabs as coloresTabs } from '../theme/colors';
 import { espacio, medida, profundidad, radio } from '../theme/layout';
-import { curvaCSS, duracion } from '../theme/motion';
+import { curva, duracion } from '../theme/motion';
 import Icono, { type NombreIcono } from './Icono';
 import PressableScale from './PressableScale';
 import Texto from './Texto';
@@ -37,29 +41,50 @@ export type TabBarProps = {
 };
 
 /**
+ * Tamaño de la etiqueta del tab activo.
+ *
+ * Sale de una cuenta, no del gusto. En una pantalla de 390 pt la píldora
+ * dispone de 178 pt una vez descontados los tres círculos, sus separaciones y
+ * el relleno de la barra; en una de 360 pt — común en Android — bajan a 148.
+ * Con la etiqueta más larga del proyecto, "Solicitudes", el contenido mide
+ * unos 145 pt a este tamaño y todavía entra en las dos. A 22 pt pediría 183 y
+ * desbordaría incluso en la pantalla grande.
+ */
+const TAM_ETIQUETA = 16;
+
+/** El marco de la píldora al abrirse y cerrarse. */
+const MORFEO = LinearTransition.duration(duracion.entrada).easing(curva.salida);
+
+/** La etiqueta entra cuando la píldora ya tiene sitio para ella. */
+const ETIQUETA = FadeIn.duration(duracion.micro).delay(90);
+
+/**
  * Barra de tabs propia.
  *
  * Va a mano y no con los tabs nativos por dos razones: en Expo Go los tabs
  * nativos son terreno resbaladizo, y el diseño pide una píldora de fondo
  * detrás del icono activo que la barra del sistema no da.
  *
- * **La píldora no se desliza y las pantallas no se deslizan.** Cambiar de tab
- * pasa más de cien veces al día y los cuatro tabs son pares, no una jerarquía:
- * un deslizamiento insinúa una profundidad que no existe y el usuario la paga
- * en cada toque. Lo único que se mueve es un fundido de 120 ms en el relleno,
- * por debajo del umbral en el que se percibe como animación — sin él el cambio
- * es un parpadeo duro.
+ * **Las pantallas no se deslizan.** Cambiar de tab pasa más de cien veces al
+ * día y los cuatro destinos son pares, no una jerarquía: deslizar entre ellos
+ * insinúa una profundidad que no existe y el usuario la paga en cada toque. Lo
+ * único que se mueve es la barra.
  *
  * **La barra es oscura y flota, separada de los bordes.** Sobre un fondo
  * blanco, una barra clara pegada al borde inferior no se distingue del
  * contenido.
  *
  * **Sólo el tab activo muestra su etiqueta.** Los otros tres quedan en
- * círculos blancos de ancho fijo y el activo se queda con el resto del ancho,
- * de modo que el reparto es determinista: la barra mide lo mismo en los cuatro
- * estados y ningún tab cambia de tamaño salvo el que entra y el que sale. Con
- * la etiqueta más larga del proyecto — "Solicitudes" — la píldora aún dispone
- * de unos 150 pt, de sobra.
+ * círculos blancos de ancho fijo y la píldora activa se ajusta a su contenido,
+ * no al hueco disponible: con "Mapa" mide la mitad que con "Solicitudes", y
+ * eso es lo que se quiere — una píldora estirada a la fuerza se lee como una
+ * caja vacía con texto dentro.
+ *
+ * El cambio de ancho lo morfea `LinearTransition`, que anima el marco del
+ * pulsable cuando la etiqueta entra o sale. Por eso la animación va en el
+ * propio `PressableScale` y no en una vista que lo envuelva: una envoltura
+ * animada dejaría al hijo saltando a su tamaño final dentro de un marco que
+ * todavía se mueve.
  *
  * El precio es que tres de los cuatro destinos quedan sin rótulo visible. Lo
  * paga `accessibilityLabel`, que sí los nombra para un lector de pantalla;
@@ -100,51 +125,52 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
               void Haptics.selectionAsync();
               onSeleccionar(item.clave);
             }}
-            style={
-              esActivo
-                ? // El activo se queda con el ancho que dejan los círculos.
-                  { flex: 1, height: medida.tabLado }
-                : { width: medida.tabLado, height: medida.tabLado }
-            }
+            layout={reducido ? undefined : MORFEO}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: espacio.sm,
+              height: medida.tabLado,
+              minWidth: medida.tabLado,
+              // Sólo el activo cede ancho. En una pantalla estrecha prefiero
+              // que se acorte la etiqueta antes que desbordar la barra.
+              flexShrink: esActivo ? 1 : 0,
+              paddingHorizontal: esActivo ? espacio.xl : 0,
+              borderRadius: radio.pastilla,
+              backgroundColor: esActivo
+                ? coloresTabs.pildora
+                : coloresTabs.inactivoFondo,
+            }}
           >
-            <Animated.View
-              style={[
-                {
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: espacio.md,
-                  paddingHorizontal: esActivo ? espacio.xl : 0,
-                  borderRadius: radio.pastilla,
-                  backgroundColor: esActivo
-                    ? coloresTabs.pildora
-                    : coloresTabs.inactivoFondo,
-                },
-                !reducido && {
-                  transitionProperty: 'backgroundColor',
-                  transitionDuration: duracion.presion,
-                  transitionTimingFunction: curvaCSS.salida,
-                },
-              ]}
-            >
-              <Icono
-                nombre={item.icono}
-                tamano={21}
-                color={esActivo ? coloresTabs.activo : coloresTabs.inactivo}
-              />
+            <Icono
+              nombre={item.icono}
+              tamano={21}
+              color={esActivo ? coloresTabs.activo : coloresTabs.inactivo}
+            />
 
-              {esActivo ? (
+            {esActivo ? (
+              // Entra con un poco de retraso: primero la píldora se abre, luego
+              // aparece la etiqueta. Al revés, el texto se vería comprimido
+              // contra el icono mientras el marco todavía crece.
+              <Animated.View
+                entering={reducido ? undefined : ETIQUETA}
+                style={{ flexShrink: 1 }}
+              >
                 <Texto
                   variante="tab"
                   color={coloresTabs.activo}
-                  style={{ fontFamily: 'DMSans_500Medium' }}
+                  style={{
+                    fontFamily: 'DMSans_500Medium',
+                    fontSize: TAM_ETIQUETA,
+                    lineHeight: TAM_ETIQUETA + 4,
+                  }}
                   numberOfLines={1}
                 >
                   {item.etiqueta}
                 </Texto>
-              ) : null}
-            </Animated.View>
+              </Animated.View>
+            ) : null}
           </PressableScale>
         );
       })}
