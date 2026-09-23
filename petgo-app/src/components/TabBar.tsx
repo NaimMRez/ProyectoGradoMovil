@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -52,6 +53,21 @@ export type TabBarProps = {
  */
 const TAM_ETIQUETA = 16;
 
+/**
+ * Ancho de la píldora activa. **El mismo para los cuatro tabs.**
+ *
+ * Está calculado sobre la etiqueta más larga del proyecto, "Solicitudes":
+ * icono (21) + separación (8) + texto (~100 a 16 pt) + relleno (2 × 16). Con
+ * "Mapa" sobra espacio y el contenido se centra, y eso es deliberado — si cada
+ * tab tuviera el ancho de su propia etiqueta, los tres círculos cambiarían de
+ * sitio en cada toque.
+ *
+ * Fijarlo también arregla el reparto: con la píldora a un ancho conocido, los
+ * inactivos se llevan exactamente lo que queda y ninguno puede comprimir al
+ * otro. Antes competían por el espacio y la etiqueta acababa recortada.
+ */
+const ANCHO_PILDORA = 164;
+
 /** El marco de la píldora al abrirse y cerrarse. */
 const MORFEO = LinearTransition.duration(duracion.entrada).easing(curva.salida);
 
@@ -74,16 +90,18 @@ const ETIQUETA = FadeIn.duration(duracion.micro).delay(90);
  * blanco, una barra clara pegada al borde inferior no se distingue del
  * contenido.
  *
- * **Sólo el tab activo muestra su etiqueta.** La píldora se ajusta a su
- * contenido y no al hueco disponible: con "Mapa" mide la mitad que con
- * "Solicitudes", y eso es lo que se quiere — estirada a la fuerza se lee como
- * una caja vacía con texto dentro.
+ * **Sólo el tab activo muestra su etiqueta**, en una píldora de ancho fijo —
+ * el mismo para los cuatro. El ancho restante lo reparten los tres inactivos a
+ * partes iguales, y lo que se estira es su **área de toque**, no el círculo:
+ * los tres siguen siendo redondos y del mismo tamaño, quedan repartidos por la
+ * barra, y no sobra hueco muerto al final.
  *
- * El ancho que la píldora no usa lo reparten los tres inactivos a partes
- * iguales. Lo que se estira es su **área de toque**, no el círculo: los tres
- * siguen siendo redondos y del mismo tamaño, quedan repartidos por la barra, y
- * no sobra hueco muerto al final. Sin esto la fila los empaqueta contra el
- * borde izquierdo y todo el sobrante se acumula en el derecho.
+ * Que la píldora sea de ancho fijo y no de ancho de contenido es lo que hace
+ * predecible el reparto. Cuando cada tab medía lo que medía su etiqueta, los
+ * tres inactivos competían con ella por el espacio: crecían de más y la
+ * etiqueta acababa recortada — "Mascotas" se leía "M..". Con un ancho conocido
+ * no hay competencia, y de paso los círculos dejan de cambiar de sitio en cada
+ * toque.
  *
  * El cambio de ancho lo morfea `LinearTransition`, que anima el marco del
  * pulsable cuando la etiqueta entra o sale. Por eso la animación va en el
@@ -99,9 +117,22 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const reducido = useReducedMotion();
 
+  // Ancho real de la barra, medido. Hace falta para saber si la píldora cabe a
+  // su ancho ideal o hay que recortarla: en una pantalla estrecha, mantenerlo
+  // dejaría a los círculos por debajo de su tamaño.
+  const [ancho, setAncho] = useState(0);
+
+  const inactivos = items.length - 1;
+  const util = ancho - 2 * espacio.md - inactivos * espacio.md;
+  const anchoPildora =
+    ancho === 0
+      ? ANCHO_PILDORA
+      : Math.min(ANCHO_PILDORA, util - inactivos * medida.tabLado);
+
   return (
     <View
       accessibilityRole="tablist"
+      onLayout={(e) => setAncho(e.nativeEvent.layout.width)}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -139,10 +170,8 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
                     justifyContent: 'center',
                     gap: espacio.md,
                     height: medida.tabLado,
-                    // En una pantalla estrecha prefiero que se acorte la
-                    // etiqueta antes que desbordar la barra.
-                    flexShrink: 1,
-                    paddingHorizontal: espacio['3xl'],
+                    width: anchoPildora,
+                    paddingHorizontal: espacio.xl,
                     borderRadius: radio.pastilla,
                     backgroundColor: coloresTabs.pildora,
                   }
