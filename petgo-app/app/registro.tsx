@@ -41,6 +41,18 @@ type Rama = {
   botonTinta: string;
 };
 
+/**
+ * Cuánto tarda la mitad elegida en ocupar la pantalla.
+ *
+ * Es largo para una transición — lo normal en la app son 240 ms —, y lo es a
+ * propósito: aquí el movimiento no acompaña a una acción, **es** la respuesta a
+ * la única pregunta de la pantalla, y se ve una vez por cuenta creada.
+ */
+const MS_RELLENO = duracion.entrada + 180 + 1000;
+
+/** Volver es deshacer, y deshacer siempre va más rápido que hacer. */
+const MS_VOLVER = Math.round(MS_RELLENO * 0.45);
+
 const RAMAS: Record<Rol, Rama> = {
   dueno: {
     valor: 'dueno',
@@ -117,13 +129,18 @@ function BotonRama({ rama, onPress }: { rama: Rama; onPress: () => void }) {
  * vistas: la transición explica por sí sola qué acaba de pasar, sin un cambio
  * de pantalla de por medio.
  *
+ * Las dos mitades no se separan con una recta sino con un domo, el mismo
+ * recurso que usan las bandas de la portada. Una recta a media pantalla parte
+ * la composición en dos mitades que compiten; la curva hace que una descanse
+ * sobre la otra.
+ *
  * Los campos van sobre una tarjeta blanca y no directamente sobre el color
  * elegido: `Campo` está diseñado para superficies claras y sobre el verde el
  * texto de los marcadores de posición no alcanza el contraste mínimo.
  */
 export default function Registro() {
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const reducido = useReducedMotion();
   const { registrarse } = useSesion();
   const { mostrar } = useToast();
@@ -138,20 +155,25 @@ export default function Registro() {
   // 0 = pantalla partida · 1 = mitad elegida a pantalla completa.
   const progreso = useSharedValue(0);
 
+  // Radio del domo que separa las dos mitades. Sale del ancho y no de la escala
+  // de radios del sistema porque no es una esquina redondeada: es una curva que
+  // tiene que guardar proporción con la pantalla, como las bandas de la portada.
+  const radioCurva = Math.round(width * 0.42);
+
   const elegir = (rol: Rol) => {
     setElegido(rol);
     progreso.value = reducido
       ? 1
-      : withTiming(1, { duration: duracion.entrada + 180, easing: curva.salida });
+      : withTiming(1, { duration: MS_RELLENO, easing: curva.salida });
   };
 
   const volver = () => {
     progreso.value = reducido
       ? 0
-      : withTiming(0, { duration: duracion.entrada, easing: curva.salida });
+      : withTiming(0, { duration: MS_VOLVER, easing: curva.salida });
     // El rol se limpia al terminar para que la mitad no cambie de tamaño a
     // mitad de camino: mientras `progreso` baja, sigue sabiendo cuál se eligió.
-    setTimeout(() => setElegido(null), reducido ? 0 : duracion.entrada);
+    setTimeout(() => setElegido(null), reducido ? 0 : MS_VOLVER);
   };
 
   const mitadVerde = useAnimatedStyle(() => ({
@@ -160,6 +182,10 @@ export default function Registro() {
       [0, 1],
       [height / 2, elegido === 'dueno' ? height : 0],
     ),
+    // El domo se aplana a medida que la mitad crece: a pantalla completa una
+    // curva abajo dejaría dos cuñas de color ajeno en las esquinas.
+    borderBottomLeftRadius: interpolate(progreso.value, [0, 1], [radioCurva, 0]),
+    borderBottomRightRadius: interpolate(progreso.value, [0, 1], [radioCurva, 0]),
   }));
 
   const mitadCrema = useAnimatedStyle(() => ({
@@ -230,6 +256,9 @@ export default function Registro() {
             overflow: 'hidden',
             justifyContent: 'center',
             paddingTop: insets.top,
+            // El domo estrecha el ancho útil cerca del borde inferior: el
+            // contenido sube para no meterse en la curva.
+            paddingBottom: espacio['7xl'],
           },
           mitadVerde,
         ]}
