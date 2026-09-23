@@ -295,15 +295,27 @@ export default function Registro() {
             backgroundColor: RAMAS.dueno.fondo,
             overflow: 'hidden',
             justifyContent: 'center',
-            paddingTop: insets.top,
-            // El domo estrecha el ancho útil cerca del borde inferior: el
-            // contenido sube para no meterse en la curva.
-            paddingBottom: espacio['7xl'],
           },
           mitadVerde,
         ]}
       >
-        <Animated.View style={[{ alignItems: 'center', gap: espacio['3xl'] }, contenidoMitades]}>
+        {/* El relleno va aquí dentro y no en la vista animada: la altura
+            declarada incluye el relleno, así que una mitad con `paddingBottom`
+            no puede encogerse por debajo de ese valor y se quedaría una franja
+            de su color pegada al borde. */}
+        <Animated.View
+          style={[
+            {
+              alignItems: 'center',
+              gap: espacio['3xl'],
+              paddingTop: insets.top,
+              // El domo estrecha el ancho útil cerca del borde inferior: el
+              // contenido sube para no meterse en la curva.
+              paddingBottom: espacio['7xl'],
+            },
+            contenidoMitades,
+          ]}
+        >
           <Image
             source={RAMAS.dueno.ilustracion}
             style={{ width: '82%', height: alto * 0.26 }}
@@ -325,12 +337,16 @@ export default function Registro() {
             backgroundColor: RAMAS.cuidador.fondo,
             overflow: 'hidden',
             justifyContent: 'center',
-            paddingBottom: insets.bottom,
           },
           mitadCrema,
         ]}
       >
-        <Animated.View style={[{ alignItems: 'center', gap: espacio['3xl'] }, contenidoMitades]}>
+        <Animated.View
+          style={[
+            { alignItems: 'center', gap: espacio['3xl'], paddingBottom: insets.bottom },
+            contenidoMitades,
+          ]}
+        >
           <Image
             source={RAMAS.cuidador.ilustracion}
             style={{ width: '82%', height: alto * 0.24 }}
