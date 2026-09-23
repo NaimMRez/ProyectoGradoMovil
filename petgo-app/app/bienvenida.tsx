@@ -52,14 +52,15 @@ const COLUMNAS: Columna[] = [
   {
     nombre: 'Milo',
     foto: require('../assets/milo.png'),
-    banda: superficie.seleccion,
+    banda: verde.lima,
     circulo: superficie.tarjeta,
     factor: 0.72,
   },
   {
     nombre: 'Pepa',
-    // El beige de marca cierra la fila. Las dos bandas verde claro quedan
-    // separadas por la verde fuerte a propósito: juntas se leerían como una.
+    // El gris cierra la fila. Las cuatro bandas recorren la paleta entera —
+    // menta clara, menta, lima y gris — porque dos tintes del mismo verde
+    // juntos se leen como una sola banda ancha.
     foto: require('../assets/pepa.png'),
     banda: superficie.aviso,
     circulo: superficie.tarjeta,

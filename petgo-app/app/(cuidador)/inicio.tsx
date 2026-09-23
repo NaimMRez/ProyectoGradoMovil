@@ -209,8 +209,8 @@ export default function InicioCuidador() {
               profundidad.nivel3,
             ]}
           >
-            <Icono nombre="fullscreen" tamano={16} color={texto.sobrePrimario} />
-            <Texto variante="botonS" color={texto.sobrePrimario}>
+            <Icono nombre="fullscreen" tamano={16} color={texto.sobreAccion} />
+            <Texto variante="botonS" color={texto.sobreAccion}>
               Mapa
             </Texto>
           </PressableScale>

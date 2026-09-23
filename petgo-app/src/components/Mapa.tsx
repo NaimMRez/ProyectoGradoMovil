@@ -175,7 +175,9 @@ export function MarcadorPrecio({
           profundidad.marcador,
         ]}
       >
-        <Texto variante="botonS" color={texto.sobrePrimario}>
+        {/* El marcador cambia de fondo al activarse, así que la tinta también:
+            blanco sobre el verde profundo, oscuro sobre la menta. */}
+        <Texto variante="botonS" color={activo ? texto.sobrePrimario : texto.sobreAccion}>
           {etiqueta}
         </Texto>
       </View>

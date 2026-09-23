@@ -44,7 +44,7 @@ function EntradaHito({ hito, ultima }: { hito: Hito; ultima: boolean }) {
 
   const piel =
     hito.fase === 'completado'
-      ? { fondo: verde.primario, borde: verde.primario, icono: texto.sobrePrimario }
+      ? { fondo: verde.primario, borde: verde.primario, icono: texto.sobreAccion }
       : hito.fase === 'actual'
         ? { fondo: ambar.actualFondo, borde: ambar.actualBorde, icono: ambar.actualIcono }
         : { fondo: superficie.tarjeta, borde: borde.suave, icono: texto.inactivo };

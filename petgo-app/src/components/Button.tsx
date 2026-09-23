@@ -57,7 +57,8 @@ type Piel = {
 const PIEL: Record<VarianteBoton, Piel> = {
   primario: {
     fondo: verde.primario,
-    texto: texto.sobrePrimario,
+    // Tinta oscura, no blanca: sobre la menta el blanco da 2,1:1.
+    texto: texto.sobreAccion,
     sombra: profundidad.botonPrimario,
   },
   secundario: {
@@ -66,8 +67,8 @@ const PIEL: Record<VarianteBoton, Piel> = {
     borde: borde.suave,
   },
   sutil: {
-    fondo: superficie.pildora,
-    texto: verde.hover,
+    fondo: verde.lima,
+    texto: texto.sobreAccion,
   },
   destructivo: {
     fondo: superficie.tarjeta,

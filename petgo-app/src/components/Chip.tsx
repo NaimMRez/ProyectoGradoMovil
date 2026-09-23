@@ -50,7 +50,7 @@ export function Chip({
     );
   }
 
-  const colorTexto = activo ? texto.sobrePrimario : texto.medio;
+  const colorTexto = activo ? texto.sobreAccion : texto.medio;
 
   return (
     <PressableScale

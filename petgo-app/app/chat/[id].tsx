@@ -40,14 +40,14 @@ function Burbuja({ mensaje, propio }: { mensaje: Mensaje; propio: boolean }) {
     >
       <Texto
         variante="cuerpo"
-        color={propio ? texto.sobrePrimario : texto.tarjeta}
+        color={propio ? texto.sobreAccion : texto.tarjeta}
         style={{ lineHeight: 21 }}
       >
         {mensaje.texto}
       </Texto>
       <Texto
         variante="caption"
-        color={propio ? 'rgba(255,255,255,0.68)' : texto.atenuado}
+        color={propio ? 'rgba(14,46,37,0.62)' : texto.atenuado}
         style={{ alignSelf: 'flex-end', marginTop: espacio.xs, fontSize: 10.5 }}
       >
         {mensaje.horaEtiqueta}
@@ -289,7 +289,7 @@ export default function Conversacion() {
               justifyContent: 'center',
             }}
           >
-            <Icono nombre="send" tamano={21} color={texto.sobrePrimario} />
+            <Icono nombre="send" tamano={21} color={texto.sobreAccion} />
         </PressableScale>
       </View>
     </KeyboardAvoidingView>

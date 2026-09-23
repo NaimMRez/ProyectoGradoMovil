@@ -35,31 +35,41 @@ const ok = (etiqueta, fg, bg, min) => {
 };
 
 const BLANCO = val('superficie', 'tarjeta');
-const BEIGE = val('superficie', 'aviso');
+const GRIS = val('superficie', 'aviso');
+const MENTA = val('verde', 'primario');
+const LIMA = val('verde', 'lima');
 const TEXTO_MIN = 4.5, SUP_MIN = 1.09;
 
-console.log(`\nFondo ${val('superficie','app')} · beige ${BEIGE} · verde ${val('verde','primario')}\n`);
+console.log(`\nFondo ${val('superficie','app')} · gris ${GRIS} · menta ${MENTA} · lima ${LIMA}\n`);
 
 console.log('── TEXTO SOBRE BLANCO ──');
 for (const k of ['principal', 'secundario', 'terciario', 'suave', 'tenue', 'atenuado', 'etiqueta'])
   ok(`texto.${k}`, val('texto', k), BLANCO, TEXTO_MIN);
 
-console.log('── TEXTO SOBRE EL PANEL BEIGE ──');
+console.log('── TEXTO SOBRE EL PANEL GRIS ──');
 for (const k of ['principal', 'secundario', 'terciario', 'suave', 'tenue', 'atenuado', 'etiqueta'])
-  ok(`texto.${k}`, val('texto', k), BEIGE, TEXTO_MIN);
+  ok(`texto.${k}`, val('texto', k), GRIS, TEXTO_MIN);
 
 console.log('── VERDES COMO TEXTO ──');
-for (const [k, bg, n] of [['texto', BLANCO, 'blanco'], ['texto', BEIGE, 'beige'], ['enlace', BLANCO, 'blanco'], ['enlace', BEIGE, 'beige']])
+for (const [k, bg, n] of [['texto', BLANCO, 'blanco'], ['texto', GRIS, 'gris'], ['enlace', BLANCO, 'blanco'], ['enlace', GRIS, 'gris']])
   ok(`verde.${k} sobre ${n}`, val('verde', k), bg, TEXTO_MIN);
 
-console.log('── BLANCO SOBRE VERDES ──');
-for (const k of ['primario', 'heroe', 'hover', 'profundo', 'splashInicio', 'splashFin'])
+console.log('── TINTA OSCURA SOBRE LOS VERDES DE ACENTO ──');
+ok('texto.sobreAccion sobre la menta', val('texto', 'sobreAccion'), MENTA, TEXTO_MIN);
+ok('texto.sobreAccion sobre la lima', val('texto', 'sobreAccion'), LIMA, TEXTO_MIN);
+ok('texto.sobreAccion sobre verde.hover', val('texto', 'sobreAccion'), val('verde', 'hover'), TEXTO_MIN);
+ok('menta se separa del blanco', MENTA, BLANCO, SUP_MIN);
+ok('lima se separa del blanco', LIMA, BLANCO, SUP_MIN);
+
+console.log('── BLANCO SOBRE LOS VERDES PROFUNDOS ──');
+for (const k of ['heroe', 'profundo', 'splashInicio', 'splashFin'])
   ok(`blanco sobre verde.${k}`, '#ffffff', val('verde', k), TEXTO_MIN);
+ok('blanco sobre intencion.whatsapp', '#ffffff', val('intencion', 'whatsapp'), TEXTO_MIN);
 ok('texto.sobreHeroe sobre verde.heroe', val('texto', 'sobreHeroe'), val('verde', 'heroe'), TEXTO_MIN);
 
 console.log('── BARRA DE TABS OSCURA ──');
 ok('tabs.inactivo sobre tabs.fondo', val('tabs', 'inactivo'), val('tabs', 'fondo'), TEXTO_MIN);
-ok('tabs.activo sobre la píldora', val('tabs', 'activo'), val('tabs', 'pildora'), TEXTO_MIN);
+ok('tabs.activo sobre la píldora de menta', val('tabs', 'activo'), val('tabs', 'pildora'), TEXTO_MIN);
 ok('píldora sobre tabs.fondo', val('tabs', 'pildora'), val('tabs', 'fondo'), SUP_MIN);
 
 console.log('── INSIGNIAS DE ESTADO ──');
@@ -73,7 +83,7 @@ for (const m of src.split('export const notificacion')[1].split('};')[0].matchAl
 console.log('── AVISO ÁMBAR ──');
 for (const k of ['titulo', 'cuerpo', 'icono']) ok(`ambar.${k}`, val('ambar', k), val('ambar', 'fondo'), TEXTO_MIN);
 ok('ambar.actualIcono sobre actualFondo', val('ambar', 'actualIcono'), val('ambar', 'actualFondo'), TEXTO_MIN);
-ok('ambar.fondo se separa del beige', val('ambar', 'fondo'), BEIGE, 1.05);
+ok('ambar.fondo se separa del gris', val('ambar', 'fondo'), GRIS, 1.05);
 
 console.log('── SUPERFICIES CONTRA EL BLANCO ──');
 for (const k of ['apagada', 'hundida', 'lienzo', 'seleccion', 'pildora', 'aviso', 'destacada', 'estadistica'])
@@ -84,7 +94,7 @@ ok('arena.superficie', val('arena', 'superficie'), BLANCO, SUP_MIN);
 
 console.log('── BORDES: DIBUJAN LA TARJETA SOBRE EL FONDO BLANCO ──');
 for (const k of ['tarjeta', 'input', 'suave']) ok(`borde.${k}`, val('borde', k), BLANCO, 1.10);
-ok('borde.aviso sobre el panel beige', val('borde', 'aviso'), BEIGE, 1.08);
+ok('borde.aviso sobre el panel gris', val('borde', 'aviso'), GRIS, 1.04);
 ok('ambar.borde sobre ambar.fondo', val('ambar', 'borde'), val('ambar', 'fondo'), 1.10);
 
 console.log(fallos === 0 ? `\n✓ LAS ${total} COMPROBACIONES PASAN\n` : `\n✗ ${fallos} DE ${total} FALLAN\n`);
