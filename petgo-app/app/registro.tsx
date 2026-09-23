@@ -145,6 +145,16 @@ export default function Registro() {
   const { registrarse } = useSesion();
   const { mostrar } = useToast();
 
+  /**
+   * Alto real del contenedor, medido.
+   *
+   * No sirve el de `useWindowDimensions`: en iOS devuelve la ventana sin el
+   * área del indicador de inicio, así que la mitad expandida se quedaba unos
+   * 34 px corta y dejaba ver el fondo del contenedor por abajo. El alto de la
+   * ventana queda sólo como valor inicial, hasta que llega la medida.
+   */
+  const [alto, setAlto] = useState(height);
+
   const [elegido, setElegido] = useState<Rol | null>(null);
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
@@ -180,7 +190,7 @@ export default function Registro() {
     height: interpolate(
       progreso.value,
       [0, 1],
-      [height / 2, elegido === 'dueno' ? height : 0],
+      [alto / 2, elegido === 'dueno' ? alto : 0],
     ),
     // El domo se aplana a medida que la mitad crece: a pantalla completa una
     // curva abajo dejaría dos cuñas de color ajeno en las esquinas.
@@ -192,7 +202,7 @@ export default function Registro() {
     height: interpolate(
       progreso.value,
       [0, 1],
-      [height / 2, elegido === 'cuidador' ? height : 0],
+      [alto / 2, elegido === 'cuidador' ? alto : 0],
     ),
   }));
 
@@ -200,6 +210,18 @@ export default function Registro() {
   // desvaneciera al mismo ritmo, se vería encogerse con la mitad.
   const contenidoMitades = useAnimatedStyle(() => ({
     opacity: interpolate(progreso.value, [0, 0.45], [1, 0], 'clamp'),
+  }));
+
+  /**
+   * Fondo del color elegido, detrás de todo.
+   *
+   * Es un respaldo: entra cuando la transición ya va por el 60 % y las mitades
+   * casi han terminado de moverse, así que no se ve aparecer. Su trabajo es que
+   * ninguna diferencia de medida —otro dispositivo, el teclado abierto, un giro
+   * de pantalla— pueda dejar otra vez una franja del color contrario.
+   */
+  const fondoElegido = useAnimatedStyle(() => ({
+    opacity: interpolate(progreso.value, [0.6, 1], [0, 1], 'clamp'),
   }));
 
   const formulario = useAnimatedStyle(() => ({
@@ -243,7 +265,25 @@ export default function Registro() {
   const rama = elegido ? RAMAS[elegido] : null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: RAMAS.cuidador.fondo }}>
+    <View
+      style={{ flex: 1, backgroundColor: RAMAS.cuidador.fondo }}
+      onLayout={(e) => setAlto(e.nativeEvent.layout.height)}
+    >
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: rama?.fondo ?? 'transparent',
+          },
+          fondoElegido,
+        ]}
+      />
+
       {/* ── Mitad de arriba: dueño ───────────────────────────────────────── */}
       <Animated.View
         style={[
@@ -266,7 +306,7 @@ export default function Registro() {
         <Animated.View style={[{ alignItems: 'center', gap: espacio['3xl'] }, contenidoMitades]}>
           <Image
             source={RAMAS.dueno.ilustracion}
-            style={{ width: '82%', height: height * 0.26 }}
+            style={{ width: '82%', height: alto * 0.26 }}
             contentFit="contain"
             accessibilityLabel="Dos personas con sus mascotas"
           />
@@ -293,7 +333,7 @@ export default function Registro() {
         <Animated.View style={[{ alignItems: 'center', gap: espacio['3xl'] }, contenidoMitades]}>
           <Image
             source={RAMAS.cuidador.ilustracion}
-            style={{ width: '82%', height: height * 0.24 }}
+            style={{ width: '82%', height: alto * 0.24 }}
             contentFit="contain"
             accessibilityLabel="Una persona paseando a un perro"
           />
