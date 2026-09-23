@@ -46,26 +46,24 @@ export type TabBarProps = {
  * **La píldora no se desliza y las pantallas no se deslizan.** Cambiar de tab
  * pasa más de cien veces al día y los cuatro tabs son pares, no una jerarquía:
  * un deslizamiento insinúa una profundidad que no existe y el usuario la paga
- * en cada toque. Lo único que se mueve es un fundido de 120 ms en la píldora,
+ * en cada toque. Lo único que se mueve es un fundido de 120 ms en el relleno,
  * por debajo del umbral en el que se percibe como animación — sin él el cambio
  * es un parpadeo duro.
  *
- * La etiqueta mantiene el mismo peso activa e inactiva. El handoff cambia de
- * 400 a 600, pero en React Native eso es cambiar de archivo de fuente, y DM
- * Sans 600 es más ancha que la 400: la etiqueta salta de ancho en cada toque.
- * El color y la píldora ya distinguen el tab activo de sobra.
- *
  * **La barra es oscura y flota, separada de los bordes.** Sobre un fondo
  * blanco, una barra clara pegada al borde inferior no se distingue del
- * contenido. La referencia de diseño resuelve esto con una barra oscura
- * redondeada, y de ahí viene la forma.
+ * contenido.
  *
- * De esa referencia **no** se toma una cosa: allí el tab activo despliega su
- * etiqueta y los inactivos quedan en icono suelto. Con cuatro tabs y etiquetas
- * como "Solicitudes" y "Servicios", esa píldora no cabe en su cuarto de barra,
- * así que los tabs tendrían que repartirse el ancho de nuevo en cada toque —
- * y esto pasa más de cien veces al día. Las etiquetas se quedan siempre
- * visibles: se gana la forma de la referencia sin pagar el salto.
+ * **Sólo el tab activo muestra su etiqueta.** Los otros tres quedan en
+ * círculos blancos de ancho fijo y el activo se queda con el resto del ancho,
+ * de modo que el reparto es determinista: la barra mide lo mismo en los cuatro
+ * estados y ningún tab cambia de tamaño salvo el que entra y el que sale. Con
+ * la etiqueta más larga del proyecto — "Solicitudes" — la píldora aún dispone
+ * de unos 150 pt, de sobra.
+ *
+ * El precio es que tres de los cuatro destinos quedan sin rótulo visible. Lo
+ * paga `accessibilityLabel`, que sí los nombra para un lector de pantalla;
+ * visualmente es una decisión deliberada de densidad.
  */
 export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
   const insets = useSafeAreaInsets();
@@ -76,18 +74,18 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
       accessibilityRole="tablist"
       style={{
         flexDirection: 'row',
+        alignItems: 'center',
+        gap: espacio.md,
         backgroundColor: coloresTabs.fondo,
-        borderRadius: radio.sheet,
+        borderRadius: radio.pastilla,
         marginHorizontal: espacio['4xl'],
         marginBottom: espacio.lg + insets.bottom,
-        paddingVertical: espacio.lg,
-        paddingHorizontal: espacio.sm,
+        padding: espacio.md,
         ...profundidad.nivel3,
       }}
     >
       {items.map((item) => {
         const esActivo = item.clave === activo;
-        const color = esActivo ? coloresTabs.activo : coloresTabs.inactivo;
 
         return (
           <PressableScale
@@ -102,22 +100,26 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
               void Haptics.selectionAsync();
               onSeleccionar(item.clave);
             }}
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              gap: espacio.xs,
-              paddingVertical: espacio.sm,
-            }}
+            style={
+              esActivo
+                ? // El activo se queda con el ancho que dejan los círculos.
+                  { flex: 1, height: medida.tabLado }
+                : { width: medida.tabLado, height: medida.tabLado }
+            }
           >
             <Animated.View
               style={[
                 {
-                  width: medida.pildoraTab.width,
-                  height: medida.pildoraTab.height,
-                  borderRadius: radio.pastilla,
+                  flex: 1,
+                  flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: esActivo ? coloresTabs.pildora : 'transparent',
+                  gap: espacio.md,
+                  paddingHorizontal: esActivo ? espacio.xl : 0,
+                  borderRadius: radio.pastilla,
+                  backgroundColor: esActivo
+                    ? coloresTabs.pildora
+                    : coloresTabs.inactivoFondo,
                 },
                 !reducido && {
                   transitionProperty: 'backgroundColor',
@@ -126,17 +128,23 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
                 },
               ]}
             >
-              <Icono nombre={item.icono} tamano={22} color={color} />
-            </Animated.View>
+              <Icono
+                nombre={item.icono}
+                tamano={21}
+                color={esActivo ? coloresTabs.activo : coloresTabs.inactivo}
+              />
 
-            <Texto
-              variante="tab"
-              color={color}
-              style={{ fontFamily: 'DMSans_500Medium' }}
-              numberOfLines={1}
-            >
-              {item.etiqueta}
-            </Texto>
+              {esActivo ? (
+                <Texto
+                  variante="tab"
+                  color={coloresTabs.activo}
+                  style={{ fontFamily: 'DMSans_500Medium' }}
+                  numberOfLines={1}
+                >
+                  {item.etiqueta}
+                </Texto>
+              ) : null}
+            </Animated.View>
           </PressableScale>
         );
       })}

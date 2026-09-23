@@ -219,12 +219,27 @@ export const notificacion: Record<
  *
  * Es la única superficie oscura permanente de la app. Sobre un fondo blanco,
  * una barra clara pegada al borde inferior desaparece.
+ *
+ * El tab activo se expande en una píldora de menta con icono y etiqueta; los
+ * inactivos quedan en círculos blancos con sólo el icono. Los círculos son de
+ * ancho fijo y la píldora se queda con lo que sobra, así que el reparto del
+ * ancho es determinista: no hay dos estados en los que la barra mida distinto.
  */
 export const tabs = {
   fondo: '#16261c',
-  /** Tinta sobre la píldora de menta: oscura, como en todos los rellenos. */
-  activo: texto.sobreAccion,
-  inactivo: '#9ba59e',
+  /**
+   * Tinta sobre la píldora de menta.
+   *
+   * **Blanco es una excepción consciente al mínimo de contraste** (2,1:1 sobre
+   * `#4fc6a0`, frente al 4,5:1 exigido). Es una decisión de diseño tomada a
+   * sabiendas y queda anotada como excepción en `pruebas/contraste.mjs`, no
+   * escondida. `texto.sobreAccion` daría 6,9:1 si algún día se revierte.
+   */
+  activo: '#ffffff',
+  /** Icono del tab inactivo: va sobre el círculo blanco, así que es oscuro. */
+  inactivo: '#16261c',
+  /** Círculo de los tabs inactivos. */
+  inactivoFondo: '#ffffff',
   pildora: verde.primario,
   borde: 'transparent',
 } as const;

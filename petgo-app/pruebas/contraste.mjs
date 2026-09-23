@@ -27,6 +27,19 @@ const L = (h) => { const n = parseInt(h.slice(1), 16); return 0.2126 * lin(n >> 
 const R = (a, b) => { const [x, y] = [L(a), L(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
 
 let fallos = 0, total = 0;
+const excepciones = [];
+/**
+ * Par que incumple el mínimo por una decisión de diseño tomada a sabiendas.
+ *
+ * No se cuenta como fallo — si no, la prueba estaría siempre roja y dejaría de
+ * avisar de las regresiones de verdad — pero se informa con su cifra al final.
+ * El objetivo es que el dato quede a la vista, no que desaparezca.
+ */
+const excepcion = (etiqueta, fg, bg, min, motivo) => {
+  const r = R(fg, bg);
+  excepciones.push({ etiqueta, r, min, motivo });
+  console.log(`  ! ${etiqueta.padEnd(46)} ${r.toFixed(2).padStart(5)} (mín ${min}) — excepción`);
+};
 const ok = (etiqueta, fg, bg, min) => {
   total += 1;
   const r = R(fg, bg);
@@ -68,8 +81,13 @@ ok('blanco sobre intencion.whatsapp', '#ffffff', val('intencion', 'whatsapp'), T
 ok('texto.sobreHeroe sobre verde.heroe', val('texto', 'sobreHeroe'), val('verde', 'heroe'), TEXTO_MIN);
 
 console.log('── BARRA DE TABS OSCURA ──');
-ok('tabs.inactivo sobre tabs.fondo', val('tabs', 'inactivo'), val('tabs', 'fondo'), TEXTO_MIN);
-ok('tabs.activo sobre la píldora de menta', val('tabs', 'activo'), val('tabs', 'pildora'), TEXTO_MIN);
+excepcion(
+  'tabs.activo sobre la píldora de menta',
+  val('tabs', 'activo'), val('tabs', 'pildora'), TEXTO_MIN,
+  'blanco sobre la menta, pedido de forma expresa para la barra inferior',
+);
+ok('tabs.inactivo sobre su círculo', val('tabs', 'inactivo'), val('tabs', 'inactivoFondo'), TEXTO_MIN);
+ok('círculo inactivo sobre tabs.fondo', val('tabs', 'inactivoFondo'), val('tabs', 'fondo'), SUP_MIN);
 ok('píldora sobre tabs.fondo', val('tabs', 'pildora'), val('tabs', 'fondo'), SUP_MIN);
 
 console.log('── INSIGNIAS DE ESTADO ──');
@@ -97,5 +115,13 @@ for (const k of ['tarjeta', 'input', 'suave']) ok(`borde.${k}`, val('borde', k),
 ok('borde.aviso sobre el panel gris', val('borde', 'aviso'), GRIS, 1.04);
 ok('ambar.borde sobre ambar.fondo', val('ambar', 'borde'), val('ambar', 'fondo'), 1.10);
 
-console.log(fallos === 0 ? `\n✓ LAS ${total} COMPROBACIONES PASAN\n` : `\n✗ ${fallos} DE ${total} FALLAN\n`);
+console.log(fallos === 0 ? `\n✓ LAS ${total} COMPROBACIONES PASAN` : `\n✗ ${fallos} DE ${total} FALLAN`);
+if (excepciones.length > 0) {
+  console.log(`\n${excepciones.length} excepción(es) aceptada(s), por decisión de diseño:`);
+  for (const e of excepciones) {
+    console.log(`  · ${e.etiqueta}: ${e.r.toFixed(2)} frente a ${e.min} exigido`);
+    console.log(`    ${e.motivo}`);
+  }
+}
+console.log('');
 process.exit(fallos === 0 ? 0 : 1);

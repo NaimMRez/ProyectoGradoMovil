@@ -155,9 +155,9 @@ export const medida = {
   /** Asa de un bottom sheet. */
   asa: { width: 38, height: 4 },
   /** Barra de tabs sin el área segura inferior. */
-  alturaTabs: 74,
-  /** Píldora tras el icono del tab activo. */
-  pildoraTab: { width: 56, height: 30 },
+  alturaTabs: 68,
+  /** Lado del círculo de un tab inactivo, y alto de la píldora activa. */
+  tabLado: 44,
 } as const;
 
 export default { espacio, radio, pantalla, profundidad, golpeo, medida };
