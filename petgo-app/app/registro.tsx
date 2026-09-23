@@ -1,119 +1,188 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
+import { Image } from 'expo-image';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { router } from 'expo-router';
-import Animated, { useReducedMotion } from 'react-native-reanimated';
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Button from '../src/components/Button';
 import Campo from '../src/components/Campo';
-import Icono from '../src/components/Icono';
-import Pantalla, { CabeceraDetalle } from '../src/components/Pantalla';
+import { BotonIcono } from '../src/components/Button';
 import PressableScale from '../src/components/PressableScale';
 import Texto from '../src/components/Texto';
 import { ErrorApi, type Rol } from '../src/api/tipos';
 import { inicioSegunRol, useSesion } from '../src/estado/sesion';
 import { useToast } from '../src/estado/toast';
-import { borde, superficie, texto, verde } from '../src/theme/colors';
-import { espacio, radio } from '../src/theme/layout';
-import { curvaCSS, duracion } from '../src/theme/motion';
+import { acceso, superficie } from '../src/theme/colors';
+import { espacio, profundidad, radio } from '../src/theme/layout';
+import { curva, duracion } from '../src/theme/motion';
 
-const ROLES: { valor: Rol; icono: 'home' | 'directions_walk'; titulo: string; descripcion: string }[] = [
-  {
+type Rama = {
+  valor: Rol;
+  /** Lo que dice el botón de la mitad. */
+  boton: string;
+  /** Bajo el título, cuando el formulario ya está abierto. */
+  subtitulo: string;
+  ilustracion: ImageSourcePropType;
+  fondo: string;
+  /** Texto principal sobre `fondo`. */
+  tinta: string;
+  /** Texto secundario sobre `fondo`. */
+  tintaSuave: string;
+  /** Relleno del botón de la mitad. */
+  botonFondo: string;
+  botonTinta: string;
+};
+
+const RAMAS: Record<Rol, Rama> = {
+  dueno: {
     valor: 'dueno',
-    icono: 'home',
-    titulo: 'Dueño de mascota',
-    descripcion: 'Publico solicitudes de paseo',
+    boton: 'Dueño',
+    subtitulo: 'Publico solicitudes de paseo',
+    ilustracion: require('../assets/seccion-dueno.png'),
+    fondo: acceso.verde,
+    tinta: acceso.sobreVerde,
+    tintaSuave: acceso.sobreVerdeSuave,
+    botonFondo: acceso.crema,
+    botonTinta: acceso.sobreCrema,
   },
-  {
+  cuidador: {
     valor: 'cuidador',
-    icono: 'directions_walk',
-    titulo: 'Cuidador / paseador',
-    descripcion: 'Busco paseos cerca de mí',
+    boton: 'Paseador',
+    subtitulo: 'Busco paseos cerca de mí',
+    ilustracion: require('../assets/seccion-cuidador.png'),
+    fondo: acceso.crema,
+    tinta: acceso.sobreCrema,
+    tintaSuave: acceso.sobreCremaSuave,
+    botonFondo: acceso.verde,
+    botonTinta: acceso.sobreVerde,
   },
-];
+};
 
 /**
- * Tarjeta de rol.
+ * Botón de una de las dos mitades.
  *
- * **El rol se elige aquí y determina toda la navegación posterior**: tabs,
- * pantalla de inicio, qué acciones aparecen en el detalle, quién puede avanzar
- * el estado y quién puede cerrarlo. No hay cambio de rol dentro de la app, así
- * que esta elección merece las dos tarjetas grandes que ocupa y no un
- * desplegable.
+ * Va en pastilla con borde del color contrario, como en la referencia: sobre
+ * una ilustración a sangre, un botón sin borde se funde con el fondo.
  */
-function TarjetaRol({
-  rol,
-  seleccionado,
-  onPress,
-}: {
-  rol: (typeof ROLES)[number];
-  seleccionado: boolean;
-  onPress: () => void;
-}) {
-  const reducido = useReducedMotion();
-
+function BotonRama({ rama, onPress }: { rama: Rama; onPress: () => void }) {
   return (
     <PressableScale
       onPress={onPress}
-      fuerza="suave"
-      accessibilityRole="radio"
-      accessibilityState={{ selected: seleccionado }}
-      accessibilityLabel={`${rol.titulo}. ${rol.descripcion}`}
+      fuerza="normal"
+      haptico="ligero"
+      accessibilityRole="button"
+      accessibilityLabel={`Crear cuenta como ${rama.boton}`}
+      style={[
+        {
+          alignSelf: 'center',
+          minWidth: 200,
+          alignItems: 'center',
+          paddingVertical: espacio.xxl,
+          paddingHorizontal: espacio['6xl'],
+          borderRadius: radio.pastilla,
+          backgroundColor: rama.botonFondo,
+          borderWidth: 2,
+          borderColor: rama.tinta,
+        },
+        profundidad.nivel1,
+      ]}
     >
-      <Animated.View
-        style={[
-          {
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: espacio.xxl,
-            padding: espacio['3xl'],
-            borderRadius: radio.xl + 2,
-            borderWidth: 1.5,
-            backgroundColor: seleccionado ? superficie.seleccion : superficie.tarjeta,
-            borderColor: seleccionado ? verde.primario : borde.suave,
-          },
-          !reducido && {
-            transitionProperty: ['backgroundColor', 'borderColor'],
-            transitionDuration: duracion.micro,
-            transitionTimingFunction: curvaCSS.salida,
-          },
-        ]}
-      >
-        <Icono nombre={rol.icono} tamano={26} color={verde.heroe} />
-
-        <View style={{ flex: 1 }}>
-          <Texto variante="nombreS" color={texto.fuerte}>
-            {rol.titulo}
-          </Texto>
-          <Texto variante="meta" color={texto.secundario}>
-            {rol.descripcion}
-          </Texto>
-        </View>
-
-        <Icono
-          nombre={seleccionado ? 'radio_button_checked' : 'radio_button_unchecked'}
-          tamano={22}
-          color={seleccionado ? verde.primario : texto.inactivo}
-        />
-      </Animated.View>
+      <Texto variante="tituloSheet" color={rama.botonTinta}>
+        {rama.boton}
+      </Texto>
     </PressableScale>
   );
 }
 
+/**
+ * Registro.
+ *
+ * **La elección de rol es la primera pregunta, no un campo más del
+ * formulario.** Determina las pestañas, la pantalla de inicio, qué acciones
+ * aparecen en el detalle de una solicitud, quién puede avanzar el estado y
+ * quién puede cerrarlo — y no se puede cambiar después. Por eso ocupa la
+ * pantalla entera partida en dos y no un selector dentro del formulario, que
+ * es como estaba antes.
+ *
+ * Al elegir, la mitad escogida se expande hasta ocupar la pantalla y la otra
+ * se comprime hasta desaparecer. Es una sola animación de altura sobre dos
+ * vistas: la transición explica por sí sola qué acaba de pasar, sin un cambio
+ * de pantalla de por medio.
+ *
+ * Los campos van sobre una tarjeta blanca y no directamente sobre el color
+ * elegido: `Campo` está diseñado para superficies claras y sobre el verde el
+ * texto de los marcadores de posición no alcanza el contraste mínimo.
+ */
 export default function Registro() {
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  const reducido = useReducedMotion();
   const { registrarse } = useSesion();
   const { mostrar } = useToast();
 
+  const [elegido, setElegido] = useState<Rol | null>(null);
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
   const [clave, setClave] = useState('');
-  const [rol, setRol] = useState<Rol>('dueno');
   const [enviando, setEnviando] = useState(false);
 
+  // 0 = pantalla partida · 1 = mitad elegida a pantalla completa.
+  const progreso = useSharedValue(0);
+
+  const elegir = (rol: Rol) => {
+    setElegido(rol);
+    progreso.value = reducido
+      ? 1
+      : withTiming(1, { duration: duracion.entrada + 180, easing: curva.salida });
+  };
+
+  const volver = () => {
+    progreso.value = reducido
+      ? 0
+      : withTiming(0, { duration: duracion.entrada, easing: curva.salida });
+    // El rol se limpia al terminar para que la mitad no cambie de tamaño a
+    // mitad de camino: mientras `progreso` baja, sigue sabiendo cuál se eligió.
+    setTimeout(() => setElegido(null), reducido ? 0 : duracion.entrada);
+  };
+
+  const mitadVerde = useAnimatedStyle(() => ({
+    height: interpolate(
+      progreso.value,
+      [0, 1],
+      [height / 2, elegido === 'dueno' ? height : 0],
+    ),
+  }));
+
+  const mitadCrema = useAnimatedStyle(() => ({
+    height: interpolate(
+      progreso.value,
+      [0, 1],
+      [height / 2, elegido === 'cuidador' ? height : 0],
+    ),
+  }));
+
+  // El contenido de las mitades se va antes de que terminen de moverse: si se
+  // desvaneciera al mismo ritmo, se vería encogerse con la mitad.
+  const contenidoMitades = useAnimatedStyle(() => ({
+    opacity: interpolate(progreso.value, [0, 0.45], [1, 0], 'clamp'),
+  }));
+
+  const formulario = useAnimatedStyle(() => ({
+    opacity: interpolate(progreso.value, [0.55, 1], [0, 1], 'clamp'),
+    transform: [{ translateY: interpolate(progreso.value, [0.55, 1], [18, 0], 'clamp') }],
+  }));
+
   const crear = async () => {
-    if (enviando) return;
+    if (enviando || !elegido) return;
 
     if (!nombre.trim()) {
       mostrar('Ingresa tu nombre completo', { tono: 'aviso', sobreTabs: false });
@@ -133,94 +202,211 @@ export default function Registro() {
 
     setEnviando(true);
     try {
-      const usuario = await registrarse({ nombre, correo, telefono, clave, rol });
+      const usuario = await registrarse({ nombre, correo, telefono, clave, rol: elegido });
       router.replace(inicioSegunRol(usuario.rol));
     } catch (fallo) {
-      mostrar(
-        fallo instanceof ErrorApi ? fallo.message : 'No pudimos crear tu cuenta',
-        { tono: 'aviso', sobreTabs: false },
-      );
+      mostrar(fallo instanceof ErrorApi ? fallo.message : 'No pudimos crear tu cuenta', {
+        tono: 'aviso',
+        sobreTabs: false,
+      });
     } finally {
       setEnviando(false);
     }
   };
 
+  const rama = elegido ? RAMAS[elegido] : null;
+
   return (
-    <Pantalla
-      relleno="detalle"
-      contentContainerStyle={{
-        flexGrow: 1,
-        paddingTop: insets.top + espacio.xl,
-        paddingBottom: insets.bottom + espacio['7xl'],
-      }}
-    >
-      <CabeceraDetalle titulo="" onAtras={() => router.back()} />
-
-      <Texto variante="tituloL" color={texto.fuerte} style={{ marginTop: espacio['5xl'] }}>
-        Crear cuenta
-      </Texto>
-
-      <View style={{ gap: espacio.xl + 1, marginTop: espacio['5xl'] }}>
-        <Campo
-          value={nombre}
-          onChangeText={setNombre}
-          placeholder="Nombre completo"
-          autoComplete="name"
-          textContentType="name"
-        />
-        <Campo
-          value={correo}
-          onChangeText={setCorreo}
-          placeholder="Correo electrónico"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-        />
-        <Campo
-          value={telefono}
-          onChangeText={setTelefono}
-          placeholder="Número telefónico"
-          keyboardType="phone-pad"
-          autoComplete="tel"
-        />
-        <Campo
-          value={clave}
-          onChangeText={setClave}
-          placeholder="Contraseña"
-          secureTextEntry
-          autoComplete="new-password"
-          ayuda="Mínimo 8 caracteres."
-        />
-      </View>
-
-      <Texto
-        variante="etiqueta"
-        color={texto.etiqueta}
-        style={{ marginTop: espacio['6xl'], marginBottom: espacio.lg }}
+    <View style={{ flex: 1, backgroundColor: RAMAS.cuidador.fondo }}>
+      {/* ── Mitad de arriba: dueño ───────────────────────────────────────── */}
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: RAMAS.dueno.fondo,
+            overflow: 'hidden',
+            justifyContent: 'center',
+            paddingTop: insets.top,
+          },
+          mitadVerde,
+        ]}
       >
-        Quiero usar PetGo como
-      </Texto>
-
-      <View style={{ gap: espacio.lg }}>
-        {ROLES.map((opcion) => (
-          <TarjetaRol
-            key={opcion.valor}
-            rol={opcion}
-            seleccionado={rol === opcion.valor}
-            onPress={() => setRol(opcion.valor)}
+        <Animated.View style={[{ alignItems: 'center', gap: espacio['3xl'] }, contenidoMitades]}>
+          <Image
+            source={RAMAS.dueno.ilustracion}
+            style={{ width: '82%', height: height * 0.26 }}
+            contentFit="contain"
+            accessibilityLabel="Dos personas con sus mascotas"
           />
-        ))}
-      </View>
+          <BotonRama rama={RAMAS.dueno} onPress={() => elegir('dueno')} />
+        </Animated.View>
+      </Animated.View>
 
-      <View style={{ flex: 1, minHeight: espacio['7xl'] }} />
+      {/* ── Mitad de abajo: paseador ─────────────────────────────────────── */}
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: RAMAS.cuidador.fondo,
+            overflow: 'hidden',
+            justifyContent: 'center',
+            paddingBottom: insets.bottom,
+          },
+          mitadCrema,
+        ]}
+      >
+        <Animated.View style={[{ alignItems: 'center', gap: espacio['3xl'] }, contenidoMitades]}>
+          <Image
+            source={RAMAS.cuidador.ilustracion}
+            style={{ width: '82%', height: height * 0.24 }}
+            contentFit="contain"
+            accessibilityLabel="Una persona paseando a un perro"
+          />
+          <BotonRama rama={RAMAS.cuidador} onPress={() => elegir('cuidador')} />
 
-      <Button
-        titulo="Crear cuenta"
-        completo
-        cargando={enviando}
-        haptico="exito"
-        onPress={() => void crear()}
-      />
-    </Pantalla>
+          <PressableScale
+            onPress={() => router.replace('/login')}
+            fuerza="fuerte"
+            hitSlop={10}
+            accessibilityRole="button"
+            style={{ flexDirection: 'row', gap: espacio.sm, alignItems: 'center' }}
+          >
+            <Texto variante="cuerpoS" color={acceso.sobreCremaSuave}>
+              ¿Ya tienes cuenta?
+            </Texto>
+            <Texto variante="enlace" color={acceso.verde}>
+              Inicia sesión
+            </Texto>
+          </PressableScale>
+        </Animated.View>
+      </Animated.View>
+
+      {/* ── Formulario ───────────────────────────────────────────────────── */}
+      {rama ? (
+        <Animated.View
+          style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, formulario]}
+          pointerEvents={elegido ? 'auto' : 'none'}
+        >
+          <KeyboardAwareScrollView
+            bottomOffset={espacio['6xl']}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingTop: insets.top + espacio.xl,
+              paddingBottom: insets.bottom + espacio['5xl'],
+              paddingHorizontal: espacio['5xl'],
+            }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <BotonIcono
+              icono="arrow_back"
+              lado={40}
+              tamanoIcono={20}
+              radioBoton={radio.md}
+              fondo="transparent"
+              colorBorde={rama.tintaSuave}
+              color={rama.tinta}
+              onPress={volver}
+              accessibilityLabel="Elegir otro tipo de cuenta"
+            />
+
+            <View style={{ alignItems: 'center', marginTop: espacio.xl }}>
+              <Image
+                source={rama.ilustracion}
+                style={{ width: '64%', height: 132 }}
+                contentFit="contain"
+                accessibilityLabel=""
+              />
+            </View>
+
+            <Texto variante="tituloL" color={rama.tinta} style={{ marginTop: espacio['3xl'] }}>
+              Crear cuenta
+            </Texto>
+            <Texto variante="cuerpoL" color={rama.tintaSuave} style={{ marginTop: espacio.xs }}>
+              {`${rama.boton} · ${rama.subtitulo}`}
+            </Texto>
+
+            <View
+              style={[
+                {
+                  marginTop: espacio['4xl'],
+                  backgroundColor: superficie.tarjeta,
+                  borderRadius: radio.sheet,
+                  padding: espacio['4xl'],
+                  gap: espacio.xl + 1,
+                },
+                profundidad.nivel2,
+              ]}
+            >
+              <Campo
+                value={nombre}
+                onChangeText={setNombre}
+                placeholder="Nombre completo"
+                autoComplete="name"
+                textContentType="name"
+              />
+              <Campo
+                value={correo}
+                onChangeText={setCorreo}
+                placeholder="Correo electrónico"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+              />
+              <Campo
+                value={telefono}
+                onChangeText={setTelefono}
+                placeholder="Número telefónico"
+                keyboardType="phone-pad"
+                autoComplete="tel"
+              />
+              <Campo
+                value={clave}
+                onChangeText={setClave}
+                placeholder="Contraseña"
+                secureTextEntry
+                autoComplete="new-password"
+                ayuda="Mínimo 8 caracteres."
+              />
+
+              <Button
+                titulo="Crear cuenta"
+                onPress={() => void crear()}
+                completo
+                cargando={enviando}
+                haptico="ligero"
+                style={{ marginTop: espacio.md }}
+              />
+            </View>
+
+            <PressableScale
+              onPress={() => router.replace('/login')}
+              fuerza="fuerte"
+              hitSlop={10}
+              accessibilityRole="button"
+              style={{
+                flexDirection: 'row',
+                gap: espacio.sm,
+                alignSelf: 'center',
+                marginTop: espacio['4xl'],
+              }}
+            >
+              <Texto variante="cuerpoS" color={rama.tintaSuave}>
+                ¿Ya tienes cuenta?
+              </Texto>
+              <Texto variante="enlace" color={rama.tinta}>
+                Inicia sesión
+              </Texto>
+            </PressableScale>
+          </KeyboardAwareScrollView>
+        </Animated.View>
+      ) : null}
+    </View>
   );
 }

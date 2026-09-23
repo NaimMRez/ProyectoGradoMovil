@@ -25,6 +25,30 @@ export const verde = {
 } as const;
 
 /**
+ * Acceso — los dos colores de la pantalla de elección de rol.
+ *
+ * Son más claros y más saturados que `verde` y `arena`, y existen sólo aquí:
+ * es la única pantalla donde un color ocupa la superficie entera y tiene que
+ * sostenerse solo, sin tarjetas ni texto encima que lo rompan. El verde de la
+ * marca (`verde.primario`) a pantalla completa se lee como una pantalla de
+ * error; éste, no.
+ *
+ * El criterio es el mismo que justifica `arena`: una familia que se define por
+ * dónde se usa, no por qué tono es. Fuera de las pantallas de acceso, ninguno
+ * de los dos debe aparecer.
+ */
+export const acceso = {
+  verde: '#2b8164',
+  crema: '#f4e7c2',
+  /** Texto y bordes sobre el verde. */
+  sobreVerde: '#ffffff',
+  sobreVerdeSuave: 'rgba(255,255,255,0.76)',
+  /** Texto sobre el crema. */
+  sobreCrema: '#1c4c3b',
+  sobreCremaSuave: '#4a6659',
+} as const;
+
+/**
  * Arena — el neutro cálido que el handoff prometió en la paleta ("verde bosque
  * + arena") pero nunca llegó a usar. Aparece solo en superficies de reposo:
  * estados vacíos, skeletons y el fondo de las pantallas de acceso. Sin él la
