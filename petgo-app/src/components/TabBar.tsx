@@ -74,11 +74,16 @@ const ETIQUETA = FadeIn.duration(duracion.micro).delay(90);
  * blanco, una barra clara pegada al borde inferior no se distingue del
  * contenido.
  *
- * **Sólo el tab activo muestra su etiqueta.** Los otros tres quedan en
- * círculos blancos de ancho fijo y la píldora activa se ajusta a su contenido,
- * no al hueco disponible: con "Mapa" mide la mitad que con "Solicitudes", y
- * eso es lo que se quiere — una píldora estirada a la fuerza se lee como una
- * caja vacía con texto dentro.
+ * **Sólo el tab activo muestra su etiqueta.** La píldora se ajusta a su
+ * contenido y no al hueco disponible: con "Mapa" mide la mitad que con
+ * "Solicitudes", y eso es lo que se quiere — estirada a la fuerza se lee como
+ * una caja vacía con texto dentro.
+ *
+ * El ancho que la píldora no usa lo reparten los tres inactivos a partes
+ * iguales. Lo que se estira es su **área de toque**, no el círculo: los tres
+ * siguen siendo redondos y del mismo tamaño, quedan repartidos por la barra, y
+ * no sobra hueco muerto al final. Sin esto la fila los empaqueta contra el
+ * borde izquierdo y todo el sobrante se acumula en el derecho.
  *
  * El cambio de ancho lo morfea `LinearTransition`, que anima el marco del
  * pulsable cuando la etiqueta entra o sale. Por eso la animación va en el
@@ -126,51 +131,77 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
               onSeleccionar(item.clave);
             }}
             layout={reducido ? undefined : MORFEO}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: espacio.sm,
-              height: medida.tabLado,
-              minWidth: medida.tabLado,
-              // Sólo el activo cede ancho. En una pantalla estrecha prefiero
-              // que se acorte la etiqueta antes que desbordar la barra.
-              flexShrink: esActivo ? 1 : 0,
-              paddingHorizontal: esActivo ? espacio.xl : 0,
-              borderRadius: radio.pastilla,
-              backgroundColor: esActivo
-                ? coloresTabs.pildora
-                : coloresTabs.inactivoFondo,
-            }}
+            style={
+              esActivo
+                ? {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: espacio.md,
+                    height: medida.tabLado,
+                    // En una pantalla estrecha prefiero que se acorte la
+                    // etiqueta antes que desbordar la barra.
+                    flexShrink: 1,
+                    paddingHorizontal: espacio['3xl'],
+                    borderRadius: radio.pastilla,
+                    backgroundColor: coloresTabs.pildora,
+                  }
+                : // El inactivo reparte con sus iguales todo el ancho que deja
+                  // la píldora. Lo que se estira es el área de toque, no el
+                  // círculo: así no queda hueco muerto al final de la barra y
+                  // los tres siguen siendo redondos y del mismo tamaño.
+                  {
+                    flex: 1,
+                    // Nunca por debajo del círculo. En una pantalla estrecha con
+                    // la etiqueta más larga activa, el reparto pediría menos de
+                    // 44 pt y los círculos se deformarían; con este mínimo la
+                    // presión recae en la píldora, que sí sabe acortar su texto.
+                    minWidth: medida.tabLado,
+                    height: medida.tabLado,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }
+            }
           >
-            <Icono
-              nombre={item.icono}
-              tamano={21}
-              color={esActivo ? coloresTabs.activo : coloresTabs.inactivo}
-            />
-
             {esActivo ? (
-              // Entra con un poco de retraso: primero la píldora se abre, luego
-              // aparece la etiqueta. Al revés, el texto se vería comprimido
-              // contra el icono mientras el marco todavía crece.
-              <Animated.View
-                entering={reducido ? undefined : ETIQUETA}
-                style={{ flexShrink: 1 }}
-              >
-                <Texto
-                  variante="tab"
-                  color={coloresTabs.activo}
-                  style={{
-                    fontFamily: 'DMSans_500Medium',
-                    fontSize: TAM_ETIQUETA,
-                    lineHeight: TAM_ETIQUETA + 4,
-                  }}
-                  numberOfLines={1}
+              <>
+                <Icono nombre={item.icono} tamano={21} color={coloresTabs.activo} />
+
+                {/* Entra con un poco de retraso: primero la píldora se abre,
+                    luego aparece la etiqueta. Al revés, el texto se vería
+                    comprimido contra el icono mientras el marco todavía crece. */}
+                <Animated.View
+                  entering={reducido ? undefined : ETIQUETA}
+                  style={{ flexShrink: 1 }}
                 >
-                  {item.etiqueta}
-                </Texto>
-              </Animated.View>
-            ) : null}
+                  <Texto
+                    variante="tab"
+                    color={coloresTabs.activo}
+                    style={{
+                      fontFamily: 'DMSans_500Medium',
+                      fontSize: TAM_ETIQUETA,
+                      lineHeight: TAM_ETIQUETA + 4,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {item.etiqueta}
+                  </Texto>
+                </Animated.View>
+              </>
+            ) : (
+              <View
+                style={{
+                  width: medida.tabLado,
+                  height: medida.tabLado,
+                  borderRadius: radio.pastilla,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: coloresTabs.inactivoFondo,
+                }}
+              >
+                <Icono nombre={item.icono} tamano={21} color={coloresTabs.inactivo} />
+              </View>
+            )}
           </PressableScale>
         );
       })}
