@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   FadeIn,
-  LinearTransition,
+  useAnimatedStyle,
   useReducedMotion,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { tabs as coloresTabs } from '../theme/colors';
@@ -68,11 +70,116 @@ const TAM_ETIQUETA = 16;
  */
 const ANCHO_PILDORA = 164;
 
-/** El marco de la píldora al abrirse y cerrarse. */
-const MORFEO = LinearTransition.duration(duracion.entrada).easing(curva.salida);
-
 /** La etiqueta entra cuando la píldora ya tiene sitio para ella. */
 const ETIQUETA = FadeIn.duration(duracion.micro).delay(90);
+
+/**
+ * Un tab.
+ *
+ * Su ancho es un valor animado explícito, no una animación de disposición.
+ * `LinearTransition` anima el marco de cada elemento por su cuenta y no
+ * garantiza que la suma siga cabiendo en la barra: a mitad de camino los
+ * cuatro anchos no sumaban el ancho disponible y el contenido se salía.
+ *
+ * Con anchos explícitos la invariante se cumple por construcción. Como la
+ * píldora mide siempre lo mismo, cambiar de tab es un intercambio exacto entre
+ * dos elementos — uno crece de `anchoInactivo` a `anchoActivo` y el otro hace
+ * el camino inverso — mientras los otros dos no se mueven. La suma es la misma
+ * en todos los fotogramas, así que no hay ningún instante en el que algo pueda
+ * desbordar.
+ */
+function Tab({
+  item,
+  esActivo,
+  anchoActivo,
+  anchoInactivo,
+  reducido,
+  onPress,
+}: {
+  item: DefinicionTab;
+  esActivo: boolean;
+  anchoActivo: number;
+  anchoInactivo: number;
+  reducido: boolean;
+  onPress: () => void;
+}) {
+  const objetivo = esActivo ? anchoActivo : anchoInactivo;
+  const ancho = useSharedValue(objetivo);
+
+  useEffect(() => {
+    ancho.value = reducido
+      ? objetivo
+      : withTiming(objetivo, { duration: duracion.entrada, easing: curva.salida });
+  }, [ancho, objetivo, reducido]);
+
+  const estiloAncho = useAnimatedStyle(() => ({ width: ancho.value }));
+
+  return (
+    <Animated.View style={[{ height: medida.tabLado }, estiloAncho]}>
+      <PressableScale
+        fuerza="fuerte"
+        accessibilityRole="tab"
+        accessibilityState={{ selected: esActivo }}
+        accessibilityLabel={item.etiqueta}
+        onPress={onPress}
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+      >
+        {esActivo ? (
+          <View
+            style={{
+              // Mientras la píldora crece, la etiqueta no debe asomar fuera.
+              overflow: 'hidden',
+              width: '100%',
+              height: '100%',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: espacio.md,
+              paddingHorizontal: espacio.xl,
+              borderRadius: radio.pastilla,
+              backgroundColor: coloresTabs.pildora,
+            }}
+          >
+            <Icono nombre={item.icono} tamano={21} color={coloresTabs.activo} />
+
+            {/* Entra con un poco de retraso: primero la píldora se abre, luego
+                aparece la etiqueta. Al revés, el texto se vería comprimido
+                contra el icono mientras el marco todavía crece. */}
+            <Animated.View entering={reducido ? undefined : ETIQUETA}>
+              <Texto
+                variante="tab"
+                color={coloresTabs.activo}
+                style={{
+                  fontFamily: 'DMSans_500Medium',
+                  fontSize: TAM_ETIQUETA,
+                  lineHeight: TAM_ETIQUETA + 4,
+                }}
+                numberOfLines={1}
+              >
+                {item.etiqueta}
+              </Texto>
+            </Animated.View>
+          </View>
+        ) : (
+          // El círculo es de tamaño fijo y va centrado: lo que se estira al
+          // repartir el ancho sobrante es el área de toque, no el círculo.
+          <View
+            style={{
+              width: medida.tabLado,
+              height: medida.tabLado,
+              borderRadius: radio.pastilla,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: coloresTabs.inactivoFondo,
+            }}
+          >
+            <Icono nombre={item.icono} tamano={21} color={coloresTabs.inactivo} />
+          </View>
+        )}
+      </PressableScale>
+    </Animated.View>
+  );
+}
 
 /**
  * Barra de tabs propia.
@@ -103,11 +210,8 @@ const ETIQUETA = FadeIn.duration(duracion.micro).delay(90);
  * no hay competencia, y de paso los círculos dejan de cambiar de sitio en cada
  * toque.
  *
- * El cambio de ancho lo morfea `LinearTransition`, que anima el marco del
- * pulsable cuando la etiqueta entra o sale. Por eso la animación va en el
- * propio `PressableScale` y no en una vista que lo envuelva: una envoltura
- * animada dejaría al hijo saltando a su tamaño final dentro de un marco que
- * todavía se mueve.
+ * El cambio de ancho lo anima cada `Tab` por su cuenta, con un valor
+ * explícito. El porqué está en su propia documentación.
  *
  * El precio es que tres de los cuatro destinos quedan sin rótulo visible. Lo
  * paga `accessibilityLabel`, que sí los nombra para un lector de pantalla;
@@ -123,11 +227,19 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
   const [ancho, setAncho] = useState(0);
 
   const inactivos = items.length - 1;
+  // Ancho repartible: la barra menos su relleno y menos las separaciones.
   const util = ancho - 2 * espacio.md - inactivos * espacio.md;
-  const anchoPildora =
+
+  // La píldora va a su ancho ideal salvo que eso deje a los círculos por
+  // debajo de su tamaño, cosa que pasa en pantallas estrechas.
+  const anchoActivo =
     ancho === 0
       ? ANCHO_PILDORA
       : Math.min(ANCHO_PILDORA, util - inactivos * medida.tabLado);
+
+  // Lo que queda, a partes iguales. Por construcción nunca baja del círculo.
+  const anchoInactivo =
+    ancho === 0 ? medida.tabLado : (util - anchoActivo) / inactivos;
 
   return (
     <View
@@ -145,95 +257,22 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
         ...profundidad.nivel3,
       }}
     >
-      {items.map((item) => {
-        const esActivo = item.clave === activo;
-
-        return (
-          <PressableScale
-            key={item.clave}
-            fuerza="fuerte"
-            accessibilityRole="tab"
-            accessibilityState={{ selected: esActivo }}
-            accessibilityLabel={item.etiqueta}
-            onPress={() => {
-              if (esActivo) return;
-              // Un toque de selección, en el mismo instante del cambio.
-              void Haptics.selectionAsync();
-              onSeleccionar(item.clave);
-            }}
-            layout={reducido ? undefined : MORFEO}
-            style={
-              esActivo
-                ? {
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: espacio.md,
-                    height: medida.tabLado,
-                    width: anchoPildora,
-                    paddingHorizontal: espacio.xl,
-                    borderRadius: radio.pastilla,
-                    backgroundColor: coloresTabs.pildora,
-                  }
-                : // El inactivo reparte con sus iguales todo el ancho que deja
-                  // la píldora. Lo que se estira es el área de toque, no el
-                  // círculo: así no queda hueco muerto al final de la barra y
-                  // los tres siguen siendo redondos y del mismo tamaño.
-                  {
-                    flex: 1,
-                    // Nunca por debajo del círculo. En una pantalla estrecha con
-                    // la etiqueta más larga activa, el reparto pediría menos de
-                    // 44 pt y los círculos se deformarían; con este mínimo la
-                    // presión recae en la píldora, que sí sabe acortar su texto.
-                    minWidth: medida.tabLado,
-                    height: medida.tabLado,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }
-            }
-          >
-            {esActivo ? (
-              <>
-                <Icono nombre={item.icono} tamano={21} color={coloresTabs.activo} />
-
-                {/* Entra con un poco de retraso: primero la píldora se abre,
-                    luego aparece la etiqueta. Al revés, el texto se vería
-                    comprimido contra el icono mientras el marco todavía crece. */}
-                <Animated.View
-                  entering={reducido ? undefined : ETIQUETA}
-                  style={{ flexShrink: 1 }}
-                >
-                  <Texto
-                    variante="tab"
-                    color={coloresTabs.activo}
-                    style={{
-                      fontFamily: 'DMSans_500Medium',
-                      fontSize: TAM_ETIQUETA,
-                      lineHeight: TAM_ETIQUETA + 4,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {item.etiqueta}
-                  </Texto>
-                </Animated.View>
-              </>
-            ) : (
-              <View
-                style={{
-                  width: medida.tabLado,
-                  height: medida.tabLado,
-                  borderRadius: radio.pastilla,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: coloresTabs.inactivoFondo,
-                }}
-              >
-                <Icono nombre={item.icono} tamano={21} color={coloresTabs.inactivo} />
-              </View>
-            )}
-          </PressableScale>
-        );
-      })}
+      {items.map((item) => (
+        <Tab
+          key={item.clave}
+          item={item}
+          esActivo={item.clave === activo}
+          anchoActivo={anchoActivo}
+          anchoInactivo={anchoInactivo}
+          reducido={reducido}
+          onPress={() => {
+            if (item.clave === activo) return;
+            // Un toque de selección, en el mismo instante del cambio.
+            void Haptics.selectionAsync();
+            onSeleccionar(item.clave);
+          }}
+        />
+      ))}
     </View>
   );
 }
