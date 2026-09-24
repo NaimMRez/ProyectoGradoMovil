@@ -132,7 +132,10 @@ export default function InicioDueno() {
               solicitud" no añade nada. */}
           <Image
             source={require('../../assets/boton-publicar.png')}
-            style={{ width: 96, height: 76 }}
+            // La caja guarda la proporción del archivo (1874 × 1761). Con
+            // `contain` y una caja de otra proporción, la ilustración se
+            // encogería y dejaría aire a los lados sin que se vea por qué.
+            style={{ width: 87, height: 82 }}
             contentFit="contain"
             accessibilityLabel=""
           />
