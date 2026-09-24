@@ -99,10 +99,14 @@ export default function InicioDueno() {
         accessibilityLabel="Publicar solicitud. Tres pasos y listo"
         style={[{ marginTop: espacio['5xl'], borderRadius: radio.xxl }, profundidad.heroe]}
       >
+        {/* Degradado horizontal: la menta a la izquierda y su versión oscura a
+            la derecha. Va con tinta oscura, no blanca — la menta no admite
+            blanco —, y por eso el extremo derecho no puede bajar más: es el
+            punto donde esa tinta todavía alcanza el mínimo de contraste. */}
         <LinearGradient
-          colors={[verde.heroe, verde.profundo]}
-          start={{ x: 0.25, y: 0 }}
-          end={{ x: 0.75, y: 1 }}
+          colors={[verde.primario, verde.primarioOscuro]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -116,24 +120,24 @@ export default function InicioDueno() {
               width: 48,
               height: 48,
               borderRadius: radio.xl,
-              backgroundColor: 'rgba(255,255,255,0.16)',
+              backgroundColor: superficie.tarjeta,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Icono nombre="add" tamano={26} color={texto.sobrePrimario} />
+            <Icono nombre="add" tamano={26} color={texto.sobreAccion} />
           </View>
 
           <View style={{ flex: 1 }}>
-            <Texto variante="tituloTarjeta" color={texto.sobrePrimario}>
+            <Texto variante="tituloTarjeta" color={texto.sobreAccion}>
               Publicar solicitud
             </Texto>
-            <Texto variante="meta" color={texto.sobreHeroe}>
+            <Texto variante="meta" color="rgba(14,46,37,0.68)">
               Tres pasos y listo
             </Texto>
           </View>
 
-          <Icono nombre="chevron_right" tamano={22} color="rgba(255,255,255,0.7)" />
+          <Icono nombre="chevron_right" tamano={22} color="rgba(14,46,37,0.58)" />
         </LinearGradient>
       </PressableScale>
 

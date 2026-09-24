@@ -21,6 +21,16 @@
 export const verde = {
   /** Relleno de acción. Lleva `texto.sobreAccion` encima, nunca blanco. */
   primario: '#4fc6a0',
+  /**
+   * Extremo oscuro del degradado de acción. El claro es `primario`.
+   *
+   * No puede ir más oscuro. El degradado lleva tinta oscura encima — la menta
+   * no admite blanco — y a partir de aquí esa tinta baja de 4,5:1 contra el
+   * extremo derecho. Con este valor da 4,57:1, y la diferencia entre los dos
+   * extremos es de 1,51: un degradado se percibe desde 1,15, así que se aprecia
+   * de sobra sin gastarse el margen de legibilidad.
+   */
+  primarioOscuro: '#40a082',
   /** Lima: la segunda acción — botones sutiles y tarjetas de oportunidad. */
   lima: '#d7f7ad',
   /** Presionado del relleno de acción. */

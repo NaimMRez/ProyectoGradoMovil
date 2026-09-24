@@ -74,6 +74,13 @@ ok('texto.sobreAccion sobre verde.hover', val('texto', 'sobreAccion'), val('verd
 ok('menta se separa del blanco', MENTA, BLANCO, SUP_MIN);
 ok('lima se separa del blanco', LIMA, BLANCO, SUP_MIN);
 
+console.log('── DEGRADADO DEL BOTÓN DE PUBLICAR ──');
+// La tinta es la misma en todo el botón, así que tiene que aguantar en los dos
+// extremos: el claro manda sobre el blanco, el oscuro sobre la tinta oscura.
+ok('tinta en el extremo claro', val('texto', 'sobreAccion'), MENTA, TEXTO_MIN);
+ok('tinta en el extremo oscuro', val('texto', 'sobreAccion'), val('verde', 'primarioOscuro'), TEXTO_MIN);
+ok('el degradado se aprecia', MENTA, val('verde', 'primarioOscuro'), 1.15);
+
 console.log('── BLANCO SOBRE LOS VERDES PROFUNDOS ──');
 for (const k of ['heroe', 'profundo', 'splashInicio', 'splashFin'])
   ok(`blanco sobre verde.${k}`, '#ffffff', val('verde', k), TEXTO_MIN);

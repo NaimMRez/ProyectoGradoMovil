@@ -132,11 +132,11 @@ export const profundidad = {
   /** Marcador de precio sobre el mapa. */
   marcador: sombra(3, 8, 0.3, 6, '#000000'),
   /** Botón principal: la sombra es verde, no gris. */
-  botonPrimario: sombra(8, 16, 0.3, 6, '#2b8164'),
+  botonPrimario: sombra(8, 16, 0.3, 6, '#2f8168'),
   /** Botón de WhatsApp en el sheet de contacto. */
-  botonWhatsapp: sombra(8, 16, 0.3, 6, '#3a9742'),
+  botonWhatsapp: sombra(8, 16, 0.3, 6, '#2f7f38'),
   /** CTA de publicación y héroe del detalle. */
-  heroe: sombra(12, 26, 0.26, 8, '#14543f'),
+  heroe: sombra(12, 26, 0.26, 8, '#1b4336'),
   /** Logo del splash sobre el degradado oscuro. */
   logo: sombra(14, 32, 0.4, 12, '#000000'),
 } as const;
