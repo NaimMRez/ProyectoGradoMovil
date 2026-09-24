@@ -1,5 +1,6 @@
 import { View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { css, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../src/components/Button';
 import Icono from '../src/components/Icono';
 import Texto from '../src/components/Texto';
-import { arena, superficie, texto, verde } from '../src/theme/colors';
+import { arena, portada, superficie, texto, verde } from '../src/theme/colors';
 import { espacio, radio } from '../src/theme/layout';
 import { curvaCSS, duracion } from '../src/theme/motion';
 
@@ -38,31 +39,28 @@ const COLUMNAS: Columna[] = [
   {
     nombre: 'Luna',
     foto: require('../assets/luna.png'),
-    banda: superficie.pildora,
+    banda: portada.banda1,
     circulo: superficie.tarjeta,
     factor: 0.62,
   },
   {
     nombre: 'Rocco',
     foto: require('../assets/rocco.png'),
-    banda: verde.primario,
+    banda: portada.banda2,
     circulo: superficie.tarjeta,
     factor: 1,
   },
   {
     nombre: 'Milo',
     foto: require('../assets/milo.png'),
-    banda: verde.lima,
+    banda: portada.banda3,
     circulo: superficie.tarjeta,
     factor: 0.72,
   },
   {
     nombre: 'Pepa',
-    // El gris cierra la fila. Las cuatro bandas recorren la paleta entera —
-    // menta clara, menta, lima y gris — porque dos tintes del mismo verde
-    // juntos se leen como una sola banda ancha.
     foto: require('../assets/pepa.png'),
-    banda: superficie.aviso,
+    banda: portada.banda4,
     circulo: superficie.tarjeta,
     factor: 0.54,
   },
@@ -113,7 +111,15 @@ export default function Bienvenida() {
   const ladoCirculo = Math.round(anchoBanda * 0.74);
 
   return (
-    <View style={{ flex: 1, backgroundColor: arena.fondo }}>
+    // El fondo va de arriba abajo del color de la app al blanco. El degradado
+    // es lo que sostiene la mitad inferior, que no tiene nada más: con un
+    // plano liso, todo el peso visual quedaba en las bandas de arriba.
+    <LinearGradient
+      colors={[superficie.app, superficie.tarjeta]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={{ flex: 1 }}
+    >
       {/* ── Bandas ──────────────────────────────────────────────────────── */}
       <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
         {COLUMNAS.map((columna, i) => (
@@ -233,6 +239,6 @@ export default function Bienvenida() {
           haptico="ligero"
         />
       </View>
-    </View>
+    </LinearGradient>
   );
 }

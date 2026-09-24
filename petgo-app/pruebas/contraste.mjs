@@ -78,6 +78,16 @@ ok('texto.sobreAccion sobre verde.hover', val('texto', 'sobreAccion'), val('verd
 ok('la menta se separa del fondo', MENTA, FONDO, SUP_MIN);
 ok('la lima se separa de la tarjeta', LIMA, TARJETA, SUP_MIN);
 
+console.log('── PORTADA: LAS CUATRO BANDAS ──');
+// Cada banda lleva un círculo blanco con la foto del perro. Si el círculo no
+// se separa de su banda, el recorte pierde su borde y la foto queda flotando.
+for (const k of ['banda1', 'banda2', 'banda3', 'banda4'])
+  ok(`círculo blanco sobre ${k}`, '#ffffff', val('portada', k), SUP_MIN);
+// El nombre va debajo de la banda, sobre el degradado del fondo: tiene que
+// leerse en sus dos extremos.
+ok('nombre en el extremo beige', val('texto', 'fuerte'), FONDO, TEXTO_MIN);
+ok('nombre en el extremo blanco', val('texto', 'fuerte'), TARJETA, TEXTO_MIN);
+
 console.log('── BANDA DE LIMA DE LA TARJETA DE MASCOTA ──');
 ok('nombre sobre la lima', val('texto', 'tarjeta'), LIMA, TEXTO_MIN);
 ok('raza sobre la lima', val('texto', 'terciario'), LIMA, TEXTO_MIN);

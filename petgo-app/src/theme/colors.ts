@@ -166,6 +166,25 @@ export const acceso = {
   sobreCremaSuave: 'rgba(14,46,37,0.62)',
 } as const;
 
+/**
+ * Las cuatro bandas de la portada, en orden de izquierda a derecha.
+ *
+ * Existen aquí y no sueltas en la pantalla por la regla del archivo, pero
+ * también porque son una composición: lo que importa no es cada color sino que
+ * los cuatro se distingan entre sí y del fondo. Dos son de la marca y dos no
+ * pertenecen a ninguna otra parte de la app.
+ *
+ * El cian y la lima separan poco del beige del fondo en claridad — 1,02 y
+ * 1,04 — pero se diferencian en tono, que es lo que esa cuenta no mide. Los
+ * cuatro llevan un círculo blanco encima y todos lo dejan ver.
+ */
+export const portada = {
+  banda1: '#bbfffd',
+  banda2: verde.primario,
+  banda3: verde.lima,
+  banda4: '#ff9951',
+} as const;
+
 /** Colores de intención. */
 export const intencion = {
   /** Único uso del verde de WhatsApp en toda la app: el sheet de contacto. */
@@ -295,6 +314,7 @@ export const vacio = {
 
 export const colores = {
   verde,
+  portada,
   acceso,
   arena,
   superficie,
