@@ -117,12 +117,12 @@ export default function InicioDueno() {
         accessibilityLabel="Publicar solicitud. Tres pasos y listo"
         style={[{ marginTop: espacio['5xl'], borderRadius: radio.xxl }, profundidad.heroe]}
       >
-        {/* Degradado horizontal: la menta a la izquierda y su versión oscura a
-            la derecha. Va con tinta oscura, no blanca — la menta no admite
-            blanco —, y por eso el extremo derecho no puede bajar más: es el
-            punto donde esa tinta todavía alcanza el mínimo de contraste. */}
+        {/* Degradado horizontal con tokens propios, no con `verde.primario`:
+            ese color lo comparten otros seis elementos de la app y este botón
+            tiene que poder cambiar solo. La tinta va oscura, no blanca — sobre
+            estos dos verdes el blanco no pasa de 2,1:1. */}
         <LinearGradient
-          colors={[verde.primario, verde.primarioOscuro]}
+          colors={[verde.publicarInicio, verde.publicarFin]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={{

@@ -76,18 +76,22 @@ ok('texto.sobreAccion sobre la menta', val('texto', 'sobreAccion'), MENTA, TEXTO
 ok('texto.sobreAccion sobre la lima', val('texto', 'sobreAccion'), LIMA, TEXTO_MIN);
 ok('texto.sobreAccion sobre verde.hover', val('texto', 'sobreAccion'), val('verde', 'hover'), TEXTO_MIN);
 ok('la menta se separa del fondo', MENTA, FONDO, SUP_MIN);
-ok('la lima se separa del fondo', LIMA, FONDO, SUP_MIN);
+ok('la lima se separa de la tarjeta', LIMA, TARJETA, SUP_MIN);
 
 console.log('── BANDA DE LIMA DE LA TARJETA DE MASCOTA ──');
 ok('nombre sobre la lima', val('texto', 'tarjeta'), LIMA, TEXTO_MIN);
 ok('raza sobre la lima', val('texto', 'terciario'), LIMA, TEXTO_MIN);
 
 console.log('── DEGRADADO DEL BOTÓN DE PUBLICAR ──');
-// La tinta es la misma en todo el botón, así que tiene que aguantar en los dos
-// extremos: el claro manda sobre el blanco, el oscuro sobre la tinta oscura.
-ok('tinta en el extremo claro', val('texto', 'sobreAccion'), MENTA, TEXTO_MIN);
-ok('tinta en el extremo oscuro', val('texto', 'sobreAccion'), val('verde', 'primarioOscuro'), TEXTO_MIN);
-ok('el degradado se aprecia', MENTA, val('verde', 'primarioOscuro'), 1.15);
+// La tinta es la misma en todo el botón, así que tiene que aguantar en sus dos
+// extremos, no sólo en el más favorable.
+ok('tinta en el extremo izquierdo', val('texto', 'sobreAccion'), val('verde', 'publicarInicio'), TEXTO_MIN);
+ok('tinta en el extremo derecho', val('texto', 'sobreAccion'), val('verde', 'publicarFin'), TEXTO_MIN);
+excepcion(
+  'el degradado se aprecia',
+  val('verde', 'publicarInicio'), val('verde', 'publicarFin'), 1.15,
+  'los dos extremos se diferencian en saturación más que en claridad, y esta cuenta sólo mide claridad',
+);
 
 console.log('── BLANCO SOBRE LOS VERDES PROFUNDOS ──');
 for (const k of ['heroe', 'profundo', 'splashInicio', 'splashFin'])

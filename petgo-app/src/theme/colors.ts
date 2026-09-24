@@ -22,15 +22,18 @@ export const verde = {
   /** Relleno de acción. Lleva `texto.sobreAccion` encima, nunca blanco. */
   primario: '#4fc6a0',
   /**
-   * Extremo oscuro del degradado de acción. El claro es `primario`.
+   * Degradado del botón de publicar solicitud, y de nada más.
    *
-   * No puede ir más oscuro. El degradado lleva tinta oscura encima — la menta
-   * no admite blanco — y a partir de aquí esa tinta baja de 4,5:1 contra el
-   * extremo derecho. Con este valor da 4,57:1, y la diferencia entre los dos
-   * extremos es de 1,51: un degradado se percibe desde 1,15, así que se aprecia
-   * de sobra sin gastarse el margen de legibilidad.
+   * Son dos valores literales y no referencias a `primario` a propósito: ese
+   * token es el color de acción de toda la app — botones, chips, píldora de la
+   * barra, marcador del mapa, burbujas del chat — y encadenar el degradado a él
+   * significa que retocar este botón repinta esos seis sitios. Aquí la
+   * independencia vale más que evitar la repetición.
+   *
+   * Los dos llevan `texto.sobreAccion` encima, con 7,8:1 y 6,9:1.
    */
-  primarioOscuro: '#40a082',
+  publicarInicio: '#82ccb4',
+  publicarFin: '#4fc6a0',
   /** Lima: la segunda acción — botones sutiles y tarjetas de oportunidad. */
   lima: '#d7f7ad',
   /** Presionado del relleno de acción. */
@@ -54,41 +57,50 @@ export const verde = {
 /** Arena — superficies de reposo: estados vacíos y pantallas de acceso. */
 export const arena = {
   fondo: '#f3f4f3',
-  superficie: '#f4f5f4',
+  superficie: '#e7e8e7',
   borde: '#e2e5e2',
   texto: '#5f665f',
 } as const;
 
-/** Superficies y fondos, de la más clara a la más profunda. */
+/**
+ * Superficies y fondos, de la más clara a la más profunda.
+ *
+ * **El fondo de la app es el gris y las tarjetas son blancas**, y entre esos
+ * dos tonos sólo hay 1,09 de separación. Es poco margen, y tiene una
+ * consecuencia que manda sobre el resto de la familia: cualquier superficie
+ * que deba distinguirse de los dos no puede vivir entre ellos, tiene que ir
+ * **por debajo del gris**. Por eso los tintes de apoyo son más oscuros que el
+ * fondo y no más claros, que es lo habitual cuando el fondo es blanco.
+ */
 export const superficie = {
-  /** Fondo general. Blanco: el lienzo, no un tono. */
-  app: '#ffffff',
-  /** Tarjeta. También blanca — la separa el borde, no el relleno. */
-  tarjeta: '#F4F5F4',
+  /** Fondo general de la app. */
+  app: '#F4F5F4',
+  /** Tarjeta. Sin borde: lo que la dibuja es ser más clara que el fondo. */
+  tarjeta: '#ffffff',
   /** Superficie de un elemento ya consumido (notificación leída). */
-  apagada: '#f3f4f3',
+  apagada: '#e7e8e7',
   /** Gris de apoyo: campos, barra de escritura y burbujas ajenas. */
-  hundida: '#f4f5f4',
+  hundida: '#e7e8e7',
   burbuja: '#f4f5f4',
   /** Más profundo que el gris: separadores de bloque. */
-  lienzo: '#eaecea',
+  lienzo: '#e0e3e0',
   /** Tinte de selección: tarjeta de rol o de mascota elegida. */
   seleccion: '#d9ece3',
   /** Tinte de chips informativos. */
   pildora: '#d4eee3',
   /** El panel gris que destaca dentro de una tarjeta: resúmenes y fichas. */
-  aviso: '#f4f5f4',
+  aviso: '#e7e8e7',
   /** Tarjeta de interesados (dueño): la lima, diluida. */
-  destacada: '#ebf9d7',
+  destacada: '#dfedcc',
   /** Recuadro de estadística sobre fondo claro. */
-  estadistica: '#f4f5f4',
+  estadistica: '#e7e8e7',
 } as const;
 
 /**
  * Escala de texto, de más a menos contraste.
  *
- * Calibrada contra el gris `#f4f5f4`, que es la superficie más exigente en la
- * que aparece texto — no contra el blanco, que es la más fácil.
+ * Calibrada contra el gris del fondo, que es la superficie más exigente en la
+ * que aparece texto — no contra el blanco de las tarjetas, que es la más fácil.
  */
 export const texto = {
   principal: '#15221a',
@@ -118,8 +130,9 @@ export const texto = {
 /**
  * Bordes y divisores, del más visible al más sutil.
  *
- * Grises neutros: con tarjeta y fondo los dos blancos, el borde es lo único
- * que dibuja la tarjeta.
+ * Grises neutros. Las tarjetas ya no llevan borde — las dibuja su relleno —,
+ * así que esta familia sólo viste campos, divisores de fila y recuadros
+ * discontinuos.
  */
 export const borde = {
   tarjeta: '#e4e7e4',
@@ -169,7 +182,7 @@ export const intencion = {
  * aviso que exige una acción no puede parecerse a nada más de la pantalla.
  */
 export const ambar = {
-  fondo: '#ffe6ae',
+  fondo: '#f0d8a4',
   borde: '#e0a63f',
   icono: '#7a4100',
   titulo: '#4e3014',
@@ -267,7 +280,7 @@ export const chrome = {
 
 /** Estados vacíos y placeholders de foto. */
 export const vacio = {
-  fondo: '#f3f4f3',
+  fondo: '#e7e8e7',
   borde: '#e6e9e6',
   icono: '#8a938c',
   titulo: '#232b26',
