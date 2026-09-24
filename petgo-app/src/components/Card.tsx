@@ -1,17 +1,24 @@
 import type { ReactNode } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
-import { borde, superficie } from '../theme/colors';
+import { superficie } from '../theme/colors';
 import { profundidad, radio } from '../theme/layout';
 import PressableScale from './PressableScale';
 
 /**
  * Jerarquía de tarjetas.
  *
- * - `flat` — se distingue del fondo sólo por el borde. Para tarjetas de apoyo
- *   dentro de una pantalla que ya tiene un protagonista.
+ * - `flat` — sin sombra. Se distingue del fondo sólo por su relleno, así que
+ *   depende por completo de que tarjeta y fondo sean tonos distintos. Para
+ *   tarjetas de apoyo dentro de una pantalla que ya tiene un protagonista.
  * - `raised` — la tarjeta por defecto de una lista.
  * - `elevated` — la tarjeta que manda. **Como mucho una por pantalla:** si dos
  *   cosas están elevadas, ninguna lo está.
+ *
+ * **Las tarjetas no llevan borde.** Lo que las separa del fondo es su propio
+ * relleno, y la jerarquía la marca la sombra. Con un fondo blanco y tarjetas
+ * grises el borde era una tercera señal para lo mismo, y de las tres es la que
+ * más ensucia: un contorno alrededor de cada bloque convierte una pantalla en
+ * una rejilla.
  */
 export type NivelTarjeta = 'flat' | 'raised' | 'elevated';
 
@@ -23,8 +30,6 @@ export type CardProps = {
   tono?: TonoTarjeta;
   /** Si se pasa, la tarjeta entera es pulsable y se hunde al tocarla. */
   onPress?: () => void;
-  /** Sin borde. Para tarjetas sobre fondo oscuro o dentro de otra tarjeta. */
-  sinBorde?: boolean;
   radioTarjeta?: number;
   style?: StyleProp<ViewStyle>;
   children?: ReactNode;
@@ -38,13 +43,6 @@ const FONDO: Record<TonoTarjeta, string> = {
   apagado: superficie.apagada,
 };
 
-const BORDE: Record<TonoTarjeta, string> = {
-  blanco: borde.tarjeta,
-  tinte: borde.aviso,
-  destacado: borde.destacada,
-  apagado: borde.sutil,
-};
-
 const SOMBRA = {
   flat: profundidad.nivel0,
   raised: profundidad.nivel1,
@@ -55,7 +53,6 @@ export function Card({
   nivel = 'raised',
   tono = 'blanco',
   onPress,
-  sinBorde = false,
   radioTarjeta = radio.tarjeta,
   style,
   children,
@@ -65,8 +62,6 @@ export function Card({
     {
       backgroundColor: FONDO[tono],
       borderRadius: radioTarjeta,
-      borderWidth: sinBorde ? 0 : 1,
-      borderColor: BORDE[tono],
     },
     SOMBRA[nivel],
     style,

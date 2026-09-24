@@ -64,7 +64,7 @@ export const superficie = {
   /** Fondo general. Blanco: el lienzo, no un tono. */
   app: '#ffffff',
   /** Tarjeta. También blanca — la separa el borde, no el relleno. */
-  tarjeta: '#ffffff',
+  tarjeta: '#F4F5F4',
   /** Superficie de un elemento ya consumido (notificación leída). */
   apagada: '#f3f4f3',
   /** Gris de apoyo: campos, barra de escritura y burbujas ajenas. */
@@ -73,9 +73,9 @@ export const superficie = {
   /** Más profundo que el gris: separadores de bloque. */
   lienzo: '#eaecea',
   /** Tinte de selección: tarjeta de rol o de mascota elegida. */
-  seleccion: '#e2f6ec',
+  seleccion: '#d9ece3',
   /** Tinte de chips informativos. */
-  pildora: '#d8f2e7',
+  pildora: '#d4eee3',
   /** El panel gris que destaca dentro de una tarjeta: resúmenes y fichas. */
   aviso: '#f4f5f4',
   /** Tarjeta de interesados (dueño): la lima, diluida. */

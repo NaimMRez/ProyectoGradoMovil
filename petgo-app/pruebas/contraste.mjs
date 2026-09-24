@@ -47,32 +47,36 @@ const ok = (etiqueta, fg, bg, min) => {
   console.log(`  ${r >= min ? '✓' : '✗'} ${etiqueta.padEnd(46)} ${r.toFixed(2).padStart(5)} (mín ${min})`);
 };
 
-const BLANCO = val('superficie', 'tarjeta');
+// Las tres superficies sobre las que hay texto. Son distintas y hay que
+// comprobarlas por separado: el fondo de la app es blanco, la tarjeta es gris
+// y el panel de apoyo va dentro de la tarjeta.
+const FONDO = val('superficie', 'app');
+const TARJETA = val('superficie', 'tarjeta');
 const GRIS = val('superficie', 'aviso');
 const MENTA = val('verde', 'primario');
 const LIMA = val('verde', 'lima');
 const TEXTO_MIN = 4.5, SUP_MIN = 1.09;
 
-console.log(`\nFondo ${val('superficie','app')} · gris ${GRIS} · menta ${MENTA} · lima ${LIMA}\n`);
+console.log(`\nFondo ${FONDO} · tarjeta ${TARJETA} · panel ${GRIS} · menta ${MENTA} · lima ${LIMA}\n`);
 
-console.log('── TEXTO SOBRE BLANCO ──');
+console.log('── TEXTO SOBRE EL FONDO DE LA APP ──');
 for (const k of ['principal', 'secundario', 'terciario', 'suave', 'tenue', 'atenuado', 'etiqueta'])
-  ok(`texto.${k}`, val('texto', k), BLANCO, TEXTO_MIN);
+  ok(`texto.${k}`, val('texto', k), FONDO, TEXTO_MIN);
 
-console.log('── TEXTO SOBRE EL PANEL GRIS ──');
+console.log('── TEXTO SOBRE LA TARJETA ──');
 for (const k of ['principal', 'secundario', 'terciario', 'suave', 'tenue', 'atenuado', 'etiqueta'])
-  ok(`texto.${k}`, val('texto', k), GRIS, TEXTO_MIN);
+  ok(`texto.${k}`, val('texto', k), TARJETA, TEXTO_MIN);
 
 console.log('── VERDES COMO TEXTO ──');
-for (const [k, bg, n] of [['texto', BLANCO, 'blanco'], ['texto', GRIS, 'gris'], ['enlace', BLANCO, 'blanco'], ['enlace', GRIS, 'gris']])
+for (const [k, bg, n] of [['texto', FONDO, 'el fondo'], ['texto', TARJETA, 'la tarjeta'], ['enlace', FONDO, 'el fondo'], ['enlace', TARJETA, 'la tarjeta']])
   ok(`verde.${k} sobre ${n}`, val('verde', k), bg, TEXTO_MIN);
 
 console.log('── TINTA OSCURA SOBRE LOS VERDES DE ACENTO ──');
 ok('texto.sobreAccion sobre la menta', val('texto', 'sobreAccion'), MENTA, TEXTO_MIN);
 ok('texto.sobreAccion sobre la lima', val('texto', 'sobreAccion'), LIMA, TEXTO_MIN);
 ok('texto.sobreAccion sobre verde.hover', val('texto', 'sobreAccion'), val('verde', 'hover'), TEXTO_MIN);
-ok('menta se separa del blanco', MENTA, BLANCO, SUP_MIN);
-ok('lima se separa del blanco', LIMA, BLANCO, SUP_MIN);
+ok('la menta se separa del fondo', MENTA, FONDO, SUP_MIN);
+ok('la lima se separa del fondo', LIMA, FONDO, SUP_MIN);
 
 console.log('── DEGRADADO DEL BOTÓN DE PUBLICAR ──');
 // La tinta es la misma en todo el botón, así que tiene que aguantar en los dos
@@ -110,16 +114,28 @@ for (const k of ['titulo', 'cuerpo', 'icono']) ok(`ambar.${k}`, val('ambar', k),
 ok('ambar.actualIcono sobre actualFondo', val('ambar', 'actualIcono'), val('ambar', 'actualFondo'), TEXTO_MIN);
 ok('ambar.fondo se separa del gris', val('ambar', 'fondo'), GRIS, 1.05);
 
-console.log('── SUPERFICIES CONTRA EL BLANCO ──');
-for (const k of ['apagada', 'hundida', 'lienzo', 'seleccion', 'pildora', 'aviso', 'destacada', 'estadistica'])
-  ok(`superficie.${k}`, val('superficie', k), BLANCO, SUP_MIN);
-ok('ambar.fondo', val('ambar', 'fondo'), BLANCO, SUP_MIN);
-ok('vacio.fondo', val('vacio', 'fondo'), BLANCO, SUP_MIN);
-ok('arena.superficie', val('arena', 'superficie'), BLANCO, SUP_MIN);
+console.log('── LA TARJETA SE DIBUJA SOLA ──');
+// Las tarjetas no llevan borde: lo único que las separa del fondo es su
+// relleno, así que esta comprobación pasa de ser cosmética a ser estructural.
+// Si alguien acerca los dos tonos, las tarjetas desaparecen.
+ok('tarjeta contra el fondo de la app', TARJETA, FONDO, SUP_MIN);
 
-console.log('── BORDES: DIBUJAN LA TARJETA SOBRE EL FONDO BLANCO ──');
-for (const k of ['tarjeta', 'input', 'suave']) ok(`borde.${k}`, val('borde', k), BLANCO, 1.10);
-ok('borde.aviso sobre el panel gris', val('borde', 'aviso'), GRIS, 1.04);
+console.log('── SUPERFICIES QUE VIVEN DENTRO DE UNA TARJETA ──');
+// Sólo éstas. `destacada` no entra: es el relleno de un tono de tarjeta, así
+// que se apoya en el fondo de la app y nunca dentro de otra tarjeta.
+for (const k of ['seleccion', 'pildora'])
+  ok(`superficie.${k}`, val('superficie', k), TARJETA, SUP_MIN);
+ok('ambar.fondo', val('ambar', 'fondo'), TARJETA, SUP_MIN);
+
+console.log('── SUPERFICIES CONTRA EL FONDO DE LA APP ──');
+for (const k of ['apagada', 'hundida', 'lienzo', 'seleccion', 'pildora', 'aviso', 'destacada', 'estadistica'])
+  ok(`superficie.${k}`, val('superficie', k), FONDO, SUP_MIN);
+ok('ambar.fondo', val('ambar', 'fondo'), FONDO, SUP_MIN);
+ok('vacio.fondo', val('vacio', 'fondo'), FONDO, SUP_MIN);
+ok('arena.superficie', val('arena', 'superficie'), FONDO, SUP_MIN);
+
+console.log('── BORDES QUE SIGUEN EN USO (campos, divisores) ──');
+for (const k of ['input', 'suave']) ok(`borde.${k}`, val('borde', k), TARJETA, 1.04);
 ok('ambar.borde sobre ambar.fondo', val('ambar', 'borde'), val('ambar', 'fondo'), 1.10);
 
 console.log(fallos === 0 ? `\n✓ LAS ${total} COMPROBACIONES PASAN` : `\n✗ ${fallos} DE ${total} FALLAN`);
