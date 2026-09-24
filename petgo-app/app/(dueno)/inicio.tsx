@@ -18,8 +18,21 @@ import Texto from '../../src/components/Texto';
 import { useMascotas, useNoLeidas, useSolicitudesActivas } from '../../src/api/hooks';
 import { useUsuario } from '../../src/estado/sesion';
 import { borde, superficie, texto, verde } from '../../src/theme/colors';
-import { espacio, profundidad, radio } from '../../src/theme/layout';
+import { espacio, radio } from '../../src/theme/layout';
 import { saludo } from '../../src/utiles/saludo';
+
+/** Cuánto sobresale la ilustración por encima del borde del botón. */
+const ASOMA_ILUSTRACION = 26;
+
+/**
+ * Hueco que el texto le deja a la ilustración dentro del botón.
+ *
+ * Es menor que la ilustración (128 pt) porque el recorte trae aire
+ * transparente alrededor de la figura. Ajustarlo al ancho real dejaría al
+ * título sin sitio: con 19 pt, "Publicar solicitud" pide unos 162 pt y en una
+ * pantalla de 360 sólo quedan 170 con esta reserva.
+ */
+const ANCHO_RESERVA = 90;
 
 /** Tarjeta del carrusel de mascotas. 118 px de ancho, foto arriba. */
 function TarjetaMascotaMini({
@@ -115,7 +128,9 @@ export default function InicioDueno() {
         fuerza="suave"
         accessibilityRole="button"
         accessibilityLabel="Publicar solicitud. Tres pasos y listo"
-        style={[{ marginTop: espacio['5xl'], borderRadius: radio.xxl }, profundidad.heroe]}
+        // El margen superior deja sitio a la parte de la ilustración que
+        // sobresale; sin él se metería debajo de la cabecera.
+        style={{ marginTop: espacio['5xl'] + ASOMA_ILUSTRACION, borderRadius: radio.pastilla }}
       >
         {/* Degradado horizontal con tokens propios, no con `verde.primario`:
             ese color lo comparten otros seis elementos de la app y este botón
@@ -129,34 +144,52 @@ export default function InicioDueno() {
             flexDirection: 'row',
             alignItems: 'center',
             gap: espacio['3xl'],
-            borderRadius: radio.xxl,
+            borderRadius: radio.pastilla,
             padding: espacio['5xl'] - 2,
           }}
         >
           <View style={{ flex: 1 }}>
-            <Texto variante="tituloTarjeta" color={texto.sobreAccion}>
+            <Texto
+              variante="tituloTarjeta"
+              color={texto.sobreAccion}
+              style={{ fontSize: 19, lineHeight: 24 }}
+            >
               Publicar solicitud
             </Texto>
-            <Texto variante="meta" color="rgba(14,46,37,0.68)">
+            <Texto
+              variante="meta"
+              color="rgba(14,46,37,0.68)"
+              style={{ fontSize: 14, lineHeight: 19 }}
+            >
               Tres pasos y listo
             </Texto>
           </View>
 
-          {/* La ilustración sustituye al cuadro con el "+" y a la flecha.
-              Los tres juntos no caben: con el cuadro, el título se parte en dos
-              líneas en cualquier pantalla de 360 pt o menos. Y de los tres, es
-              la que más dice — un "+" sobre un botón que ya se llama "Publicar
-              solicitud" no añade nada. */}
-          <Image
-            source={require('../../assets/boton-publicar.png')}
-            // La caja guarda la proporción del archivo (1874 × 1761). Con
-            // `contain` y una caja de otra proporción, la ilustración se
-            // encogería y dejaría aire a los lados sin que se vea por qué.
-            style={{ width: 87, height: 82 }}
-            contentFit="contain"
-            accessibilityLabel=""
-          />
+          {/* Hueco reservado para la ilustración. Mide menos que ella a
+              propósito: el recorte deja aire transparente alrededor de la
+              figura, así que el texto puede acercarse sin tocarla. */}
+          <View style={{ width: ANCHO_RESERVA }} />
         </LinearGradient>
+
+        {/* La ilustración va fuera del degradado y posicionada de forma
+            absoluta, no como un hijo más de la fila. Dentro no podría
+            sobresalir por arriba: un hijo que desborda una vista con esquinas
+            redondeadas queda recortado en iOS. Aquí no ocupa sitio en la
+            disposición, así que puede ser más grande que su hueco. */}
+        <Image
+          source={require('../../assets/boton-publicar.png')}
+          // La caja guarda la proporción del archivo (1874 × 1761); con otra,
+          // `contain` la encogería y dejaría aire sin que se vea por qué.
+          style={{
+            position: 'absolute',
+            right: espacio.lg,
+            top: -ASOMA_ILUSTRACION,
+            width: 128,
+            height: 120,
+          }}
+          contentFit="contain"
+          accessibilityLabel=""
+        />
       </PressableScale>
 
       {/* ── Mis mascotas ─────────────────────────────────────────────────── */}
