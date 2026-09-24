@@ -1,4 +1,5 @@
 import { ScrollView, View } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -115,19 +116,6 @@ export default function InicioDueno() {
             padding: espacio['5xl'] - 2,
           }}
         >
-          <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: radio.xl,
-              backgroundColor: superficie.tarjeta,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Icono nombre="add" tamano={26} color={texto.sobreAccion} />
-          </View>
-
           <View style={{ flex: 1 }}>
             <Texto variante="tituloTarjeta" color={texto.sobreAccion}>
               Publicar solicitud
@@ -137,7 +125,17 @@ export default function InicioDueno() {
             </Texto>
           </View>
 
-          <Icono nombre="chevron_right" tamano={22} color="rgba(14,46,37,0.58)" />
+          {/* La ilustración sustituye al cuadro con el "+" y a la flecha.
+              Los tres juntos no caben: con el cuadro, el título se parte en dos
+              líneas en cualquier pantalla de 360 pt o menos. Y de los tres, es
+              la que más dice — un "+" sobre un botón que ya se llama "Publicar
+              solicitud" no añade nada. */}
+          <Image
+            source={require('../../assets/boton-publicar.png')}
+            style={{ width: 96, height: 76 }}
+            contentFit="contain"
+            accessibilityLabel=""
+          />
         </LinearGradient>
       </PressableScale>
 
