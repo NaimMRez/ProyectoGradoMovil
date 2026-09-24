@@ -83,10 +83,18 @@ ok('nombre sobre la lima', val('texto', 'tarjeta'), LIMA, TEXTO_MIN);
 ok('raza sobre la lima', val('texto', 'terciario'), LIMA, TEXTO_MIN);
 
 console.log('── DEGRADADO DEL BOTÓN DE PUBLICAR ──');
-// La tinta es la misma en todo el botón, así que tiene que aguantar en sus dos
-// extremos, no sólo en el más favorable.
-ok('tinta en el extremo izquierdo', val('texto', 'sobreAccion'), val('verde', 'publicarInicio'), TEXTO_MIN);
-ok('tinta en el extremo derecho', val('texto', 'sobreAccion'), val('verde', 'publicarFin'), TEXTO_MIN);
+// La tinta es la misma en todo el botón, así que se mide en sus dos extremos,
+// no sólo en el más favorable.
+excepcion(
+  'tinta blanca en el extremo izquierdo',
+  '#ffffff', val('verde', 'publicarInicio'), TEXTO_MIN,
+  'texto blanco sobre el degradado, pedido de forma expresa; texto.sobreAccion daría 7,8:1',
+);
+excepcion(
+  'tinta blanca en el extremo derecho',
+  '#ffffff', val('verde', 'publicarFin'), TEXTO_MIN,
+  'texto blanco sobre el degradado, pedido de forma expresa; texto.sobreAccion daría 6,9:1',
+);
 excepcion(
   'el degradado se aprecia',
   val('verde', 'publicarInicio'), val('verde', 'publicarFin'), 1.15,

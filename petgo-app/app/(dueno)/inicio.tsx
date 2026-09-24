@@ -24,6 +24,22 @@ import { saludo } from '../../src/utiles/saludo';
 /** Cuánto sobresale la ilustración por encima del borde del botón. */
 const ASOMA_ILUSTRACION = 26;
 
+/** Alto de la ilustración dentro del botón de publicar. */
+const ALTO_ILUSTRACION = 120;
+
+/** Aire entre el pie de la ilustración y el borde inferior del botón. */
+const AIRE_INFERIOR = 14;
+
+/**
+ * Alto mínimo del botón.
+ *
+ * Sale de la geometría de la ilustración, no de un número elegido a ojo: es lo
+ * que mide la parte que queda dentro del botón más el aire que debe quedarle
+ * por debajo. Si se toca cualquiera de los tres valores, el alto se recalcula
+ * solo y la ilustración nunca toca el borde.
+ */
+const ALTO_BOTON = ALTO_ILUSTRACION - ASOMA_ILUSTRACION + AIRE_INFERIOR;
+
 /**
  * Hueco que el texto le deja a la ilustración dentro del botón.
  *
@@ -134,8 +150,13 @@ export default function InicioDueno() {
       >
         {/* Degradado horizontal con tokens propios, no con `verde.primario`:
             ese color lo comparten otros seis elementos de la app y este botón
-            tiene que poder cambiar solo. La tinta va oscura, no blanca — sobre
-            estos dos verdes el blanco no pasa de 2,1:1. */}
+            tiene que poder cambiar solo.
+
+            **La tinta blanca es una excepción consciente al mínimo de
+            contraste**: sobre estos dos verdes da 1,9:1 y 2,1:1, frente al
+            4,5:1 exigido. Es una decisión de diseño tomada a sabiendas y queda
+            anotada como excepción en `pruebas/contraste.mjs`, no escondida.
+            `texto.sobreAccion` daría 7,8:1 y 6,9:1 si algún día se revierte. */}
         <LinearGradient
           colors={[verde.publicarInicio, verde.publicarFin]}
           start={{ x: 0, y: 0.5 }}
@@ -145,20 +166,21 @@ export default function InicioDueno() {
             alignItems: 'center',
             gap: espacio['3xl'],
             borderRadius: radio.pastilla,
-            padding: espacio['5xl'] - 2,
+            paddingHorizontal: espacio['5xl'] - 2,
+            minHeight: ALTO_BOTON,
           }}
         >
           <View style={{ flex: 1 }}>
             <Texto
               variante="tituloTarjeta"
-              color={texto.sobreAccion}
+              color={texto.sobrePrimario}
               style={{ fontSize: 19, lineHeight: 24 }}
             >
               Publicar solicitud
             </Texto>
             <Texto
               variante="meta"
-              color="rgba(14,46,37,0.68)"
+              color="rgba(255,255,255,0.84)"
               style={{ fontSize: 14, lineHeight: 19 }}
             >
               Tres pasos y listo
@@ -185,7 +207,7 @@ export default function InicioDueno() {
             right: espacio.lg,
             top: -ASOMA_ILUSTRACION,
             width: 128,
-            height: 120,
+            height: ALTO_ILUSTRACION,
           }}
           contentFit="contain"
           accessibilityLabel=""
