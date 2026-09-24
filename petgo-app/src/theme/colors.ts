@@ -56,44 +56,47 @@ export const verde = {
 
 /** Arena — superficies de reposo: estados vacíos y pantallas de acceso. */
 export const arena = {
-  fondo: '#f3f4f3',
-  superficie: '#e7e8e7',
-  borde: '#e2e5e2',
-  texto: '#5f665f',
+  fondo: '#f4f1e0',
+  superficie: '#e7e4d4',
+  borde: '#ded9c4',
+  texto: '#63604f',
 } as const;
 
 /**
  * Superficies y fondos, de la más clara a la más profunda.
  *
- * **El fondo de la app es el gris y las tarjetas son blancas**, y entre esos
- * dos tonos sólo hay 1,09 de separación. Es poco margen, y tiene una
- * consecuencia que manda sobre el resto de la familia: cualquier superficie
- * que deba distinguirse de los dos no puede vivir entre ellos, tiene que ir
- * **por debajo del gris**. Por eso los tintes de apoyo son más oscuros que el
- * fondo y no más claros, que es lo habitual cuando el fondo es blanco.
+ * **El fondo de la app es un beige cálido y las tarjetas son blancas**, y entre
+ * los dos hay poco margen. Eso tiene una consecuencia que manda sobre el resto
+ * de la familia: cualquier superficie que deba distinguirse de ambos no puede
+ * vivir entre ellos, tiene que ir **por debajo del fondo**. Por eso los tintes
+ * de apoyo son más oscuros que el fondo y no más claros, que es lo habitual
+ * cuando el fondo es blanco.
+ *
+ * Y son cálidos, derivados del propio fondo: un gris neutro sobre un beige se
+ * lee sucio, no como una superficie distinta.
  */
 export const superficie = {
   /** Fondo general de la app. */
-  app: '#F4F5F4',
+  app: '#F4F1E0',
   /** Tarjeta. Sin borde: lo que la dibuja es ser más clara que el fondo. */
   tarjeta: '#ffffff',
   /** Superficie de un elemento ya consumido (notificación leída). */
-  apagada: '#e7e8e7',
+  apagada: '#e7e4d4',
   /** Gris de apoyo: campos, barra de escritura y burbujas ajenas. */
-  hundida: '#e7e8e7',
-  burbuja: '#f4f5f4',
+  hundida: '#e7e4d4',
+  burbuja: '#eeead9',
   /** Más profundo que el gris: separadores de bloque. */
-  lienzo: '#e0e3e0',
+  lienzo: '#e0ddce',
   /** Tinte de selección: tarjeta de rol o de mascota elegida. */
-  seleccion: '#d9ece3',
+  seleccion: '#d7eae1',
   /** Tinte de chips informativos. */
-  pildora: '#d4eee3',
+  pildora: '#d1ebe0',
   /** El panel gris que destaca dentro de una tarjeta: resúmenes y fichas. */
-  aviso: '#e7e8e7',
+  aviso: '#e7e4d4',
   /** Tarjeta de interesados (dueño): la lima, diluida. */
-  destacada: '#dfedcc',
+  destacada: '#ddebca',
   /** Recuadro de estadística sobre fondo claro. */
-  estadistica: '#e7e8e7',
+  estadistica: '#e7e4d4',
 } as const;
 
 /**
@@ -111,7 +114,7 @@ export const texto = {
   terciario: '#5c6861',
   suave: '#5f6b64',
   tenue: '#636f68',
-  atenuado: '#67736c',
+  atenuado: '#65706a',
   etiqueta: '#495349',
   inactivo: '#8f9891',
   /** Blanco. Sólo sobre los verdes profundos y los degradados. */
@@ -280,7 +283,7 @@ export const chrome = {
 
 /** Estados vacíos y placeholders de foto. */
 export const vacio = {
-  fondo: '#e7e8e7',
+  fondo: '#e7e4d4',
   borde: '#e6e9e6',
   icono: '#8a938c',
   titulo: '#232b26',
