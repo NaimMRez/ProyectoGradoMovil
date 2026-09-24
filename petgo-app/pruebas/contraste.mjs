@@ -78,6 +78,10 @@ ok('texto.sobreAccion sobre verde.hover', val('texto', 'sobreAccion'), val('verd
 ok('la menta se separa del fondo', MENTA, FONDO, SUP_MIN);
 ok('la lima se separa del fondo', LIMA, FONDO, SUP_MIN);
 
+console.log('── BANDA DE LIMA DE LA TARJETA DE MASCOTA ──');
+ok('nombre sobre la lima', val('texto', 'tarjeta'), LIMA, TEXTO_MIN);
+ok('raza sobre la lima', val('texto', 'terciario'), LIMA, TEXTO_MIN);
+
 console.log('── DEGRADADO DEL BOTÓN DE PUBLICAR ──');
 // La tinta es la misma en todo el botón, así que tiene que aguantar en los dos
 // extremos: el claro manda sobre el blanco, el oscuro sobre la tinta oscura.

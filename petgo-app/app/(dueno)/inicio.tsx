@@ -43,12 +43,29 @@ function TarjetaMascotaMini({
         radioFoto={radio.md}
         style={{ width: '100%' }}
       />
-      <Texto variante="tituloDenso" color={texto.tarjeta} numberOfLines={1} style={{ marginTop: espacio.lg }}>
-        {nombre}
-      </Texto>
-      <Texto variante="caption" color={texto.terciario} numberOfLines={1}>
-        {raza}
-      </Texto>
+      {/* El nombre y la raza van juntos en una banda de lima pegada al borde
+          inferior de la tarjeta. Los márgenes negativos cancelan el relleno de
+          la tarjeta para que la banda llegue a los tres bordes; sin ellos
+          quedaría un bloque flotando con 12 pt de gris alrededor. */}
+      <View
+        style={{
+          marginTop: espacio.xl,
+          marginHorizontal: -espacio.xl,
+          marginBottom: -espacio.xl,
+          paddingHorizontal: espacio.lg,
+          paddingVertical: espacio.lg,
+          backgroundColor: verde.lima,
+          borderBottomLeftRadius: radio.tarjeta,
+          borderBottomRightRadius: radio.tarjeta,
+        }}
+      >
+        <Texto variante="tituloDenso" color={texto.tarjeta} numberOfLines={1}>
+          {nombre}
+        </Texto>
+        <Texto variante="caption" color={texto.terciario} numberOfLines={1}>
+          {raza}
+        </Texto>
+      </View>
     </Card>
   );
 }
