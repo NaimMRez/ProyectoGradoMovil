@@ -193,9 +193,14 @@ function Tab({
  * insinúa una profundidad que no existe y el usuario la paga en cada toque. Lo
  * único que se mueve es la barra.
  *
- * **La barra es oscura y flota, separada de los bordes.** Sobre un fondo
- * blanco, una barra clara pegada al borde inferior no se distingue del
- * contenido.
+ * **La barra flota sobre el contenido, no debajo de él.** Va posicionada de
+ * forma absoluta, así que no ocupa sitio en la disposición y el contenido de
+ * la pantalla llega hasta el borde inferior y pasa por detrás. Antes era un
+ * hermano del contenido: la pantalla terminaba donde empezaba la barra y
+ * quedaba una franja opaca que no dejaba ver nada.
+ *
+ * Quien reserva el aire para que el último elemento de una lista no quede
+ * tapado es `Pantalla` con `conTabs`, usando `medida.alturaTabs`.
  *
  * **Sólo el tab activo muestra su etiqueta**, en una píldora de ancho fijo —
  * el mismo para los cuatro. El ancho restante lo reparten los tres inactivos a
@@ -246,6 +251,10 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
       accessibilityRole="tablist"
       onLayout={(e) => setAncho(e.nativeEvent.layout.width)}
       style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
         flexDirection: 'row',
         alignItems: 'center',
         gap: espacio.md,
@@ -275,15 +284,6 @@ export function TabBar({ items, activo, onSeleccionar }: TabBarProps) {
       ))}
     </View>
   );
-}
-
-/**
- * Espaciador con la altura de la barra, para que el último elemento de una
- * lista con scroll no quede debajo de ella.
- */
-export function EspacioTabs({ extra = 0 }: { extra?: number }) {
-  const insets = useSafeAreaInsets();
-  return <View style={{ height: medida.alturaTabs + insets.bottom + extra }} />;
 }
 
 export default TabBar;

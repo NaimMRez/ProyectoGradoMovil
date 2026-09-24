@@ -247,7 +247,10 @@ export default function InicioCuidador() {
           contentContainerStyle={{
             paddingHorizontal: espacio['4xl'],
             paddingTop: espacio['4xl'],
-            paddingBottom: espacio['5xl'],
+            // La barra de tabs flota encima, así que el hueco lo reserva la
+            // lista. Esta pantalla no pasa por `Pantalla`, que es quien lo
+            // hace en las demás.
+            paddingBottom: espacio['5xl'] + medida.alturaTabs + insets.bottom,
           }}
           showsVerticalScrollIndicator={false}
         >

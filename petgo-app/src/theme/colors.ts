@@ -32,8 +32,8 @@ export const verde = {
    *
    * Los dos llevan `texto.sobreAccion` encima, con 7,8:1 y 6,9:1.
    */
-  publicarInicio: '#82ccb4',
-  publicarFin: '#4fc6a0',
+  publicarInicio: '#82CCB4',
+  publicarFin: '#36A984',
   /** Lima: la segunda acción — botones sutiles y tarjetas de oportunidad. */
   lima: '#d7f7ad',
   /** Presionado del relleno de acción. */

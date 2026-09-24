@@ -154,8 +154,15 @@ export const medida = {
   botonMapa: 44,
   /** Asa de un bottom sheet. */
   asa: { width: 38, height: 4 },
-  /** Barra de tabs sin el área segura inferior. */
-  alturaTabs: 68,
+  /**
+   * Lo que ocupa la barra de tabs flotante, sin el área segura inferior.
+   *
+   * Es la suma de lo que mide: el lado de un tab (44) más el relleno de la
+   * barra (8 arriba y 8 abajo) más su separación del borde inferior (10). Lo
+   * usa `Pantalla` con `conTabs` para reservar el hueco, porque la barra flota
+   * y no lo ocupa por sí misma.
+   */
+  alturaTabs: 70,
   /** Lado del círculo de un tab inactivo, y alto de la píldora activa. */
   tabLado: 44,
 } as const;

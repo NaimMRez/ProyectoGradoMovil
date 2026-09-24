@@ -7,6 +7,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { borde, superficie, texto, verde } from '../theme/colors';
 import { espacio, medida, pantalla as rellenoPantalla, radio } from '../theme/layout';
 import { BotonIcono } from './Button';
@@ -18,12 +19,13 @@ export type PantallaProps = {
   /** `lista` para pantallas con tabs, `detalle` con botón atrás, `acceso` para login. */
   relleno?: keyof typeof rellenoPantalla | 'ninguno';
   /**
-   * Aire extra al final de una pantalla con barra de tabs.
+   * Reserva el sitio de la barra de tabs al final del contenido.
    *
-   * **No** suma la altura de la barra: tanto el navegador de tabs como la
-   * barra suelta que se pinta en Notificaciones y Mensajes son hermanos del
-   * contenido, no una capa encima, así que su altura ya está descontada. Lo
-   * único que hace falta es que el último elemento no quede pegado al borde.
+   * **Suma la altura completa de la barra**, porque la barra flota encima del
+   * contenido y no ocupa lugar en la disposición: sin esta reserva, el último
+   * elemento de una lista queda tapado por ella. Añade además el área segura
+   * inferior y un poco de aire, para que el último elemento no llegue a rozar
+   * la barra.
    */
   conTabs?: boolean;
   /** Sin scroll: la pantalla es una columna fija (chat, mapa, asistente). */
@@ -44,6 +46,8 @@ export function Pantalla({
   contentContainerStyle,
   ...restoScroll
 }: PantallaProps) {
+  const insets = useSafeAreaInsets();
+
   const base =
     relleno === 'ninguno'
       ? { paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }
@@ -51,7 +55,10 @@ export function Pantalla({
 
   const relleneado: StyleProp<ViewStyle> = [
     base,
-    conTabs && { paddingBottom: base.paddingBottom + espacio['4xl'] },
+    conTabs && {
+      paddingBottom:
+        base.paddingBottom + medida.alturaTabs + insets.bottom + espacio['4xl'],
+    },
     contentContainerStyle,
   ];
 
