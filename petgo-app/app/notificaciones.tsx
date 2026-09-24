@@ -7,10 +7,9 @@ import Card from '../src/components/Card';
 import EmptyState from '../src/components/EmptyState';
 import ErrorState from '../src/components/ErrorState';
 import Icono from '../src/components/Icono';
-import Pantalla from '../src/components/Pantalla';
+import Pantalla, { CabeceraDetalle } from '../src/components/Pantalla';
 import PressableScale from '../src/components/PressableScale';
 import { ListaSkeleton, SkeletonNotificacion } from '../src/components/Skeleton';
-import TabBar, { TABS_CUIDADOR, TABS_DUENO } from '../src/components/TabBar';
 import Texto from '../src/components/Texto';
 import {
   useConfirmarFinalizacion,
@@ -18,11 +17,9 @@ import {
   useVaciarNotificaciones,
 } from '../src/api/hooks';
 import type { Notificacion } from '../src/api/tipos';
-import { useUsuario } from '../src/estado/sesion';
 import {
   intencion,
   notificacion as coloresNotificacion,
-  superficie,
   texto,
 } from '../src/theme/colors';
 import { espacio, radio } from '../src/theme/layout';
@@ -124,7 +121,6 @@ function TarjetaNotificacion({
  * servicio. El botón equivalente del seguimiento es el secundario.
  */
 export default function Notificaciones() {
-  const usuario = useUsuario();
   const insets = useSafeAreaInsets();
 
   const consulta = useNotificaciones();
@@ -152,20 +148,15 @@ export default function Notificaciones() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: superficie.app }}>
-      <Pantalla conTabs contentContainerStyle={{ paddingTop: insets.top + espacio.xl }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            gap: espacio.xl,
-          }}
-        >
-          <Texto variante="tituloM" color={texto.principal}>
-            Notificaciones
-          </Texto>
-          {hayAlguna ? (
+    <Pantalla contentContainerStyle={{ paddingTop: insets.top + espacio.xl }}>
+      {/* Se llega aquí desde la campana, no desde la barra de tabs, así que la
+          salida es el botón de volver. Antes se pintaba la barra con `activo=""`
+          — ningún tab marcado — y eso dejaba a los cuatro repartiéndose el
+          hueco de tres, con un vacío al final. */}
+      <CabeceraDetalle
+        titulo="Notificaciones"
+        derecha={
+          hayAlguna ? (
             <PressableScale
               onPress={() => vaciar.mutate()}
               fuerza="fuerte"
@@ -177,8 +168,9 @@ export default function Notificaciones() {
                 Vaciar
               </Texto>
             </PressableScale>
-          ) : null}
-        </View>
+          ) : null
+        }
+      />
 
         <View style={{ marginTop: espacio['4xl'], gap: espacio.xl - 1 }}>
           {consulta.isPending ? (
@@ -203,22 +195,6 @@ export default function Notificaciones() {
             ))
           )}
         </View>
-      </Pantalla>
-
-      {/* El handoff mantiene la barra visible aquí aunque no sea un tab: se
-          llega desde la campana, no desde la barra, y quitarla dejaría al
-          usuario sin salida más que el gesto de volver atrás. */}
-      <TabBar
-        items={usuario.rol === 'dueno' ? TABS_DUENO : TABS_CUIDADOR}
-        activo=""
-        onSeleccionar={(clave) =>
-          router.dismissTo(
-            usuario.rol === 'dueno'
-              ? (`/(dueno)/${clave}` as never)
-              : (`/(cuidador)/${clave}` as never),
-          )
-        }
-      />
-    </View>
+    </Pantalla>
   );
 }

@@ -5,15 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Card from '../src/components/Card';
 import EmptyState from '../src/components/EmptyState';
 import ErrorState from '../src/components/ErrorState';
-import Pantalla from '../src/components/Pantalla';
+import Pantalla, { CabeceraDetalle } from '../src/components/Pantalla';
 import { Avatar } from '../src/components/PhotoPlaceholder';
 import { ListaSkeleton, SkeletonConversacion } from '../src/components/Skeleton';
-import TabBar, { TABS_CUIDADOR, TABS_DUENO } from '../src/components/TabBar';
 import Texto from '../src/components/Texto';
 import { useConversaciones } from '../src/api/hooks';
 import { plural } from '../src/api/mock/formato';
 import type { Conversacion } from '../src/api/tipos';
-import { useUsuario } from '../src/estado/sesion';
 import { superficie, texto, verde } from '../src/theme/colors';
 import { espacio, radio } from '../src/theme/layout';
 
@@ -75,21 +73,23 @@ function FilaConversacion({
 
 /** Lista de conversaciones activas. */
 export default function Mensajes() {
-  const usuario = useUsuario();
   const insets = useSafeAreaInsets();
   const consulta = useConversaciones();
 
   return (
-    <View style={{ flex: 1, backgroundColor: superficie.app }}>
-      <Pantalla conTabs contentContainerStyle={{ paddingTop: insets.top + espacio.xl }}>
-        <Texto variante="tituloM" color={texto.principal}>
-          Mensajes
-        </Texto>
-        <Texto variante="cuerpoS" color={texto.terciario} style={{ marginTop: espacio.xs }}>
-          {consulta.data
+    <Pantalla contentContainerStyle={{ paddingTop: insets.top + espacio.xl }}>
+      {/* Se llega aquí desde el icono de la cabecera, no desde la barra de
+          tabs, así que la salida es el botón de volver. Antes se pintaba la
+          barra con `activo=""` — ningún tab marcado — y eso dejaba a los cuatro
+          repartiéndose el hueco de tres, con un vacío al final. */}
+      <CabeceraDetalle
+        titulo="Mensajes"
+        subtitulo={
+          consulta.data
             ? plural(consulta.data.length, 'conversación activa', 'conversaciones activas')
-            : ' '}
-        </Texto>
+            : undefined
+        }
+      />
 
         <View style={{ marginTop: espacio['4xl'], gap: espacio.xl - 1 }}>
           {consulta.isPending ? (
@@ -110,19 +110,6 @@ export default function Mensajes() {
             ))
           )}
         </View>
-      </Pantalla>
-
-      <TabBar
-        items={usuario.rol === 'dueno' ? TABS_DUENO : TABS_CUIDADOR}
-        activo=""
-        onSeleccionar={(clave) =>
-          router.dismissTo(
-            usuario.rol === 'dueno'
-              ? (`/(dueno)/${clave}` as never)
-              : (`/(cuidador)/${clave}` as never),
-          )
-        }
-      />
-    </View>
+    </Pantalla>
   );
 }
