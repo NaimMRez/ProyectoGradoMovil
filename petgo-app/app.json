@@ -28,12 +28,7 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
-      ],
-      "config": {
-        "googleMaps": {
-          "apiKey": ""
-        }
-      }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -49,6 +44,12 @@
           "image": "./assets/icon.png",
           "imageWidth": 140,
           "resizeMode": "contain"
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "androidGoogleMapsApiKey": ""
         }
       ],
       "@react-native-community/datetimepicker",

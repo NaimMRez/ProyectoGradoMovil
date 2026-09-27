@@ -63,9 +63,18 @@ export type MapaProps = {
  * los tiles. En iOS ese modo no existe, así que los tiles se dibujan encima
  * del mapa de Apple — son opacos, de modo que el resultado es el mismo.
  *
- * Ojo con Android: aunque los tiles sean de CartoDB, `react-native-maps` va
- * sobre Google Maps y **necesita una API key** en `app.json`
- * (`android.config.googleMaps.apiKey`) para que el `MapView` monte.
+ * **No se pasa `provider`**, y eso es deliberado. En Android sólo existe Google
+ * Maps, así que el prop no cambia nada; en iOS, ponerlo en `PROVIDER_GOOGLE`
+ * —como pide la documentación de Expo para quien quiera Google en iOS— nos
+ * obligaría a una segunda clave y a habilitar el Maps SDK for iOS para no ver
+ * nada, porque los tiles de CartoDB tapan la base. Sin el prop, iOS usa Apple
+ * Maps, que no pide clave.
+ *
+ * Android sí la pide: aunque los tiles sean de CartoDB, el `MapView` va sobre
+ * el SDK de Google y no monta sin una clave en el manifiesto. La pone el plugin
+ * `react-native-maps` desde `app.json`
+ * (`plugins.react-native-maps.androidGoogleMapsApiKey`). **En Expo Go no hace
+ * falta** —Expo Go trae la suya—, sólo en un binario propio.
  */
 export const Mapa = forwardRef<MapView, MapaProps>(function Mapa(
   {
