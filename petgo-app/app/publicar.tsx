@@ -6,18 +6,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Button from '../src/components/Button';
 import Campo from '../src/components/Campo';
-import Chip, { GrupoChips } from '../src/components/Chip';
+import Chip from '../src/components/Chip';
 import Icono from '../src/components/Icono';
 import Mapa, { PinUbicacion, regionCercana } from '../src/components/Mapa';
 import { CabeceraDetalle } from '../src/components/Pantalla';
 import PhotoPlaceholder from '../src/components/PhotoPlaceholder';
 import PressableScale from '../src/components/PressableScale';
+import SelectorDuracion from '../src/components/SelectorDuracion';
 import { Skeleton } from '../src/components/Skeleton';
 import { useSelectorFechaHora } from '../src/components/SelectorFechaHora';
 import Texto from '../src/components/Texto';
 import EmptyState from '../src/components/EmptyState';
 import { useCrearSolicitud, useMascotas } from '../src/api/hooks';
-import { fechaHora, unirNombres } from '../src/api/mock/formato';
+import {
+  duracion as textoDuracion,
+  fechaHora,
+  unirNombres,
+} from '../src/api/mock/formato';
 import { useToast } from '../src/estado/toast';
 import { borde, superficie, texto, verde } from '../src/theme/colors';
 import { espacio, radio } from '../src/theme/layout';
@@ -25,7 +30,6 @@ import { curvaCSS, duracion as duracionMotion } from '../src/theme/motion';
 import { DIAS_MAXIMOS } from '../src/utiles/agenda';
 
 const PASOS = ['Mascotas', 'Cuándo y cuánto', 'Ubicación'] as const;
-const DURACIONES = ['30 min', '45 min', '60 min', '90 min'];
 const PAGO_SUGERIDO = 40;
 
 /** Punto de recogida por defecto: la dirección de la dueña del seed. */
@@ -107,7 +111,9 @@ export default function Publicar() {
   const [paso, setPaso] = useState(0);
   const [elegidas, setElegidas] = useState<string[]>([]);
   const [fecha, setFecha] = useState<Date | null>(null);
-  const [duracion, setDuracion] = useState('60 min');
+  // En minutos, no en la etiqueta: la barra trabaja con números y el texto lo
+  // pone el formateador, que es el mismo que usa el resto de la app.
+  const [duracion, setDuracion] = useState(60);
   const [pago, setPago] = useState('');
   const [direccion, setDireccion] = useState(UBICACION_INICIAL.direccion);
   const [notas, setNotas] = useState('');
@@ -135,13 +141,12 @@ export default function Publicar() {
     if (!fecha) return;
 
     const monto = Number.parseInt(pago, 10);
-    const minutos = Number.parseInt(duracion, 10);
 
     crear.mutate(
       {
         mascotaIds: elegidas,
         fechaHora: fecha,
-        duracionMin: minutos,
+        duracionMin: duracion,
         pagoBs: monto,
         direccion,
         zona: UBICACION_INICIAL.zona,
@@ -342,7 +347,7 @@ export default function Publicar() {
 
             <View>
               <Etiqueta>Duración del paseo</Etiqueta>
-              <GrupoChips opciones={DURACIONES} valor={duracion} onCambio={setDuracion} />
+              <SelectorDuracion valor={duracion} onCambio={setDuracion} />
             </View>
 
             <View>
@@ -471,7 +476,7 @@ export default function Publicar() {
               {[
                 ['Mascotas', unirNombres(nombresElegidos) || '—'],
                 ['Fecha', fecha ? fechaHora(fecha) : '—'],
-                ['Duración', duracion],
+                ['Duración', textoDuracion(duracion)],
                 ['Remuneración', pago ? `Bs ${pago}` : '—'],
                 ['Recogida', direccion],
               ].map(([etiqueta, valor]) => (

@@ -43,11 +43,13 @@ export async function buscarCercanas(
   excluirDuenoId: string,
   limite = 60,
 ): Promise<{ id: string; metros: number }[]> {
-  const { lat, lng, radioMetros, pagoMinimo, duracionMin, rangoFechas, rangoMascotas } =
+  const { lat, lng, radioMetros, pagoMinimo, rangoDuracion, rangoFechas, rangoMascotas } =
     filtros;
 
   const desde = rangoFechas?.desde ?? null;
   const hasta = rangoFechas?.hasta ?? null;
+  const minDuracion = rangoDuracion?.minimo ?? null;
+  const maxDuracion = rangoDuracion?.maximo ?? null;
   const minMascotas = rangoMascotas?.minimo ?? null;
   const maxMascotas = rangoMascotas?.maximo ?? null;
 
@@ -69,7 +71,8 @@ export async function buscarCercanas(
         ${radioMetros}::float8
       )
       AND (${pagoMinimo}::int IS NULL OR r.pago_bs >= ${pagoMinimo}::int)
-      AND (${duracionMin}::int IS NULL OR r.duracion_min = ${duracionMin}::int)
+      AND (${minDuracion}::int IS NULL OR r.duracion_min >= ${minDuracion}::int)
+      AND (${maxDuracion}::int IS NULL OR r.duracion_min <= ${maxDuracion}::int)
       AND (${desde}::timestamp IS NULL OR r.fecha_hora >= ${desde}::timestamp)
       AND (${hasta}::timestamp IS NULL OR r.fecha_hora <= ${hasta}::timestamp)
       AND (

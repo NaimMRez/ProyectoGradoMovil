@@ -99,9 +99,19 @@ export function distanciaLarga(metros: number): string {
   return `a ${distancia(metros)} del punto de recogida`;
 }
 
-/** "60 min". */
+/**
+ * "45 min" · "1 h" · "1 h 30 min" · "3 h".
+ *
+ * Decía siempre los minutos en crudo, que servía mientras el paseo más largo
+ * era de hora y media. Con tres horas en la barra, "180 min" obliga al lector
+ * a dividir.
+ */
 export function duracion(minutos: number): string {
-  return `${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  const resto = minutos % 60;
+  if (horas === 0) return `${resto} min`;
+  if (resto === 0) return `${horas} h`;
+  return `${horas} h ${resto} min`;
 }
 
 /** Traduce el chip de distancia a metros para la consulta geoespacial. */

@@ -101,7 +101,7 @@ export type Solicitud = {
   fechaEtiqueta: string;
   /** "Hoy" — versión corta para tarjetas densas. */
   fechaCortaEtiqueta: string;
-  /** "60 min". */
+  /** "45 min" · "1 h" · "1 h 30 min" · "3 h". */
   duracionEtiqueta: string;
   duracionMin: number;
   /** "Bs 45". `pagoBs` sólo se usa para filtrar; no se pinta nunca. */
@@ -185,7 +185,7 @@ export type Filtros = {
   distancia: string;
   /** "Cualquiera" | "Bs 30+" | "Bs 40+" | "Bs 60+". */
   pago: string;
-  /** "Todas" | "30 min" | "60 min" | "90 min". */
+  /** "Todas" | "Hasta 1 h" | "1 a 2 h" | "Más de 2 h". */
   duracion: string;
   /** "Cualquiera" | "Hoy" | "Esta semana". */
   fecha: string;
@@ -204,7 +204,7 @@ export const FILTROS_POR_DEFECTO: Filtros = {
 export const OPCIONES_FILTRO = {
   distancia: ['1 km', '3 km', '5 km', '10 km'],
   pago: ['Cualquiera', 'Bs 30+', 'Bs 40+', 'Bs 60+'],
-  duracion: ['Todas', '30 min', '60 min', '90 min'],
+  duracion: ['Todas', 'Hasta 1 h', '1 a 2 h', 'Más de 2 h'],
   fecha: ['Cualquiera', 'Hoy', 'Esta semana'],
   mascotas: ['Cualquiera', '1', '2 o más'],
 } as const;

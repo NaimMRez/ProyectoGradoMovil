@@ -83,3 +83,72 @@ export function combinar(dia: Date, momento: Date): Date {
   d.setHours(momento.getHours(), momento.getMinutes(), 0, 0);
   return d;
 }
+
+// ── Duración del paseo ──────────────────────────────────────────────────────
+
+/**
+ * De media hora a tres, en tramos de quince minutos.
+ *
+ * Los mismos tres números están en `requests.schemas.ts` del backend, que es
+ * quien decide si una solicitud se guarda. Aquí sirven para dibujar la barra:
+ * la app no puede producir un valor fuera de la rejilla, pero el servidor
+ * tampoco se fía.
+ *
+ * El paso de quince y no de treinta es lo que conserva los 45 minutos, que ya
+ * estaban entre las opciones viejas y son una duración real de paseo.
+ */
+export const DURACION_MIN = 30;
+export const DURACION_MAX = 180;
+export const DURACION_PASO = 15;
+
+/** Los topes de la barra, de menor a mayor. Son once. */
+export function topesDuracion(): number[] {
+  const cuantos = (DURACION_MAX - DURACION_MIN) / DURACION_PASO + 1;
+  return Array.from({ length: cuantos }, (_, i) => DURACION_MIN + i * DURACION_PASO);
+}
+
+/**
+ * Lleva cualquier minuto al tope más cercano, dentro del rango.
+ *
+ * Es lo que convierte la posición del dedo en un valor: la barra no tiene
+ * estados intermedios, así que el redondeo pasa antes de que el número exista,
+ * no al soltar.
+ */
+export function ajustarDuracion(minutos: number): number {
+  const acotado = Math.min(DURACION_MAX, Math.max(DURACION_MIN, minutos));
+  const paso = Math.round((acotado - DURACION_MIN) / DURACION_PASO);
+  return DURACION_MIN + paso * DURACION_PASO;
+}
+
+/** Un tramo de duraciones. `maximo` nulo es "sin techo". */
+export type TramoDuracion = { minimo: number; maximo: number | null };
+
+/**
+ * `"1 a 2 h"` → el tramo de duraciones que caen dentro. `"Todas"` → sin filtro.
+ *
+ * El chip del cuidador era una igualdad exacta contra 30, 60 o 90 minutos, y
+ * eso dejó de servir en cuanto el dueño pudo pedir cualquier múltiplo de
+ * quince: seis de los once valores posibles no aparecerían bajo ningún chip.
+ *
+ * Los tres tramos **parten la rejilla**: cada duración cae en uno y sólo uno.
+ * Sus bordes salen de `DURACION_PASO` y no de números escritos a mano, para que
+ * cambiar el paso no abra un hueco entre dos tramos.
+ *
+ * El servidor hace esta misma traducción en `requests.schemas.ts`, porque es él
+ * quien filtra de verdad. Ésta es la copia que usa el adaptador simulado, y las
+ * dos tienen una comprobación que fija la partición: si una se mueve sin la
+ * otra, el mock y la API devuelven listas distintas para el mismo filtro.
+ */
+export function tramoDuracion(chip: string): TramoDuracion | null {
+  if (chip === 'Hasta 1 h') return { minimo: DURACION_MIN, maximo: 60 };
+  if (chip === '1 a 2 h') return { minimo: 60 + DURACION_PASO, maximo: 120 };
+  if (chip === 'Más de 2 h') return { minimo: 120 + DURACION_PASO, maximo: null };
+  return null;
+}
+
+/** Si una duración cae dentro de un tramo. */
+export function dentroDelTramo(minutos: number, tramo: TramoDuracion): boolean {
+  if (minutos < tramo.minimo) return false;
+  return tramo.maximo == null || minutos <= tramo.maximo;
+}
+

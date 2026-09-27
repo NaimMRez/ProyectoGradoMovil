@@ -92,6 +92,24 @@ console.log('── BANDA DE LIMA DE LA TARJETA DE MASCOTA ──');
 ok('nombre sobre la lima', val('texto', 'tarjeta'), LIMA, TEXTO_MIN);
 ok('raza sobre la lima', val('texto', 'terciario'), LIMA, TEXTO_MIN);
 
+console.log('── BARRA DE DURACIÓN DEL PASEO ──');
+// La pista es arena y el relleno menta, así que el pulgar blanco tiene dos
+// fondos debajo y los topes también. Los topes son del mismo color en los dos
+// lados, por eso se miden contra ambos.
+ok('la pista se separa de la tarjeta', val('superficie', 'hundida'), TARJETA, SUP_MIN);
+ok('el relleno se separa de la pista', MENTA, val('superficie', 'hundida'), SUP_MIN);
+ok('tope sobre la pista', val('texto', 'sobreAccion'), val('superficie', 'hundida'), TEXTO_MIN);
+ok('tope sobre el relleno', val('texto', 'sobreAccion'), MENTA, TEXTO_MIN);
+// El pulgar mide 28 y la pista 10, así que la mayor parte de su contorno no cae
+// sobre la pista sino sobre la tarjeta — y es blanco sobre blanco. El aro de
+// menta es lo único que lo dibuja ahí, y por eso no es decoración.
+ok('el aro del pulgar sobre la tarjeta', MENTA, TARJETA, SUP_MIN);
+ok('el aro del pulgar sobre la pista', MENTA, val('superficie', 'hundida'), SUP_MIN);
+// Sobre el relleno el aro desaparece — es menta contra menta —, así que ahí lo
+// que separa al pulgar es su cuerpo blanco.
+ok('el cuerpo del pulgar sobre el relleno', TARJETA, MENTA, SUP_MIN);
+ok('la cifra de la duración', val('verde', 'texto'), TARJETA, TEXTO_MIN);
+
 console.log('── SELECTOR DE FECHA Y HORA ──');
 // La tira de días vive dentro del sheet, que es blanco. El día elegido se
 // pinta de menta y los otros seis van sin relleno, así que hay dos fondos.

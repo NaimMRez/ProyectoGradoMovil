@@ -13,11 +13,23 @@ import { finDelDia, inicioDelDia, proximosSieteDias } from '../../lib/fechas.js'
  * de la app en la tienda.
  */
 
+/**
+ * Duración de un paseo, en minutos: de media hora a tres, en tramos de quince.
+ *
+ * El dueño la elige con una barra deslizante de topes fijos, así que la app no
+ * puede mandar otra cosa; la validación de abajo está porque el servidor no da
+ * por bueno nada que venga del cliente. Los mismos tres números viven en
+ * `src/utiles/agenda.ts` de la app, que es quien dibuja la barra.
+ */
+export const DURACION_MIN = 30;
+export const DURACION_MAX = 180;
+export const DURACION_PASO = 15;
+
 // ── Filtros del cuidador ────────────────────────────────────────────────────
 
 const CHIP_DISTANCIA = ['1 km', '3 km', '5 km', '10 km'] as const;
 const CHIP_PAGO = ['Cualquiera', 'Bs 30+', 'Bs 40+', 'Bs 60+'] as const;
-const CHIP_DURACION = ['Todas', '30 min', '60 min', '90 min'] as const;
+export const CHIP_DURACION = ['Todas', 'Hasta 1 h', '1 a 2 h', 'Más de 2 h'] as const;
 const CHIP_FECHA = ['Cualquiera', 'Hoy', 'Esta semana'] as const;
 const CHIP_MASCOTAS = ['Cualquiera', '1', '2 o más'] as const;
 
@@ -31,10 +43,23 @@ const aPagoMinimo = (chip: (typeof CHIP_PAGO)[number]): number | null => {
   return Number.parseInt(chip.replace(/\D/g, ''), 10);
 };
 
-/** `"60 min"` → 60. `"Todas"` → sin filtro. */
-const aDuracion = (chip: (typeof CHIP_DURACION)[number]): number | null => {
+/**
+ * `"1 a 2 h"` → el tramo de duraciones que caen dentro. `"Todas"` → sin filtro.
+ *
+ * Era una igualdad exacta contra 30, 60 o 90 minutos, y eso dejó de servir en
+ * cuanto el dueño pudo pedir cualquier múltiplo de quince entre media hora y
+ * tres: un paseo de 45 minutos no aparecía bajo ningún chip, y con la barra
+ * nueva seis de los once valores posibles quedarían invisibles. Los tres tramos
+ * cubren toda la rejilla, no se solapan y sus bordes salen del paso, no de
+ * números escritos a mano.
+ */
+export const tramoDuracion = (
+  chip: (typeof CHIP_DURACION)[number],
+): { minimo: number; maximo: number | null } | null => {
   if (chip === 'Todas') return null;
-  return Number.parseInt(chip, 10);
+  if (chip === 'Hasta 1 h') return { minimo: DURACION_MIN, maximo: 60 };
+  if (chip === '1 a 2 h') return { minimo: 60 + DURACION_PASO, maximo: 120 };
+  return { minimo: 120 + DURACION_PASO, maximo: null };
 };
 
 /** `"Hoy"` y `"Esta semana"` → rango de fechas, en hora de Bolivia. */
@@ -75,7 +100,7 @@ export const filtrosCercanasSchema = z
       lng: entrada.lng,
       radioMetros: aMetros(entrada.distancia),
       pagoMinimo: aPagoMinimo(entrada.pago),
-      duracionMin: aDuracion(entrada.duracion),
+      rangoDuracion: tramoDuracion(entrada.duracion),
       rangoFechas: aRangoFechas(entrada.fecha, ahora),
       rangoMascotas: aRangoMascotas(entrada.mascotas),
     };
@@ -148,7 +173,12 @@ export const crearSolicitudSchema = z.object({
   duracionMin: z
     .number()
     .int()
-    .refine((v) => [30, 45, 60, 90].includes(v), 'Duración no válida'),
+    .min(DURACION_MIN, `El paseo más corto dura ${DURACION_MIN} minutos`)
+    .max(DURACION_MAX, `El paseo más largo dura ${DURACION_MAX / 60} horas`)
+    .refine(
+      (v) => v % DURACION_PASO === 0,
+      `La duración va en tramos de ${DURACION_PASO} minutos`,
+    ),
 
   pagoBs: z
     .number()

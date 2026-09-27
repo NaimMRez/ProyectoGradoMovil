@@ -12,6 +12,14 @@ import assert from 'node:assert/strict';
 import { EstadoServicio, Rol } from '../src/generated/prisma/enums.js';
 import { ErrorHttp } from '../src/lib/errores.js';
 import {
+  CHIP_DURACION,
+  DURACION_MAX,
+  DURACION_MIN,
+  DURACION_PASO,
+  crearSolicitudSchema,
+  tramoDuracion,
+} from '../src/modules/requests/requests.schemas.js';
+import {
   SECUENCIA,
   esTerminal,
   exigirParticipante,
@@ -29,6 +37,7 @@ import {
   bolivianos,
   distancia,
   distanciaLarga,
+  duracion,
   metaUsuario,
   plural,
   primerNombre,
@@ -300,6 +309,55 @@ prueba('montos y distancias con la convención boliviana', () => {
   assert.equal(distancia(600), '600 m');
   assert.equal(distancia(1200), '1,2 km');
   assert.equal(distanciaLarga(600), 'a 600 m del punto de recogida');
+});
+
+prueba('la duración se dice en horas cuando pasa de una', () => {
+  assert.equal(duracion(30), '30 min');
+  assert.equal(duracion(45), '45 min');
+  assert.equal(duracion(60), '1 h');
+  assert.equal(duracion(90), '1 h 30 min');
+  assert.equal(duracion(120), '2 h');
+  assert.equal(duracion(180), '3 h');
+});
+
+prueba('la duración de una solicitud tiene que caer en la rejilla', () => {
+  // La barra de la app no puede producir otra cosa, pero el servidor no da por
+  // bueno nada que venga del cliente: esta es la comprobación que lo impide.
+  const base = {
+    mascotaIds: ['3f4e6d1a-0b2c-4d5e-8f90-a1b2c3d4e5f6'],
+    fechaHora: new Date(Date.now() + 60 * 60 * 1000),
+    pagoBs: 45,
+    direccion: 'Av. América 123',
+    zona: 'Cercado, Cochabamba',
+    lat: -17.39,
+    lng: -66.16,
+    notas: '',
+  };
+  const valida = (duracionMin: number) =>
+    crearSolicitudSchema.safeParse({ ...base, duracionMin }).success;
+
+  assert.ok(valida(DURACION_MIN));
+  assert.ok(valida(DURACION_MAX));
+  assert.ok(valida(45), 'los 45 minutos de los chips viejos siguen valiendo');
+  assert.ok(valida(120));
+  assert.ok(!valida(DURACION_MIN - DURACION_PASO), 'por debajo del mínimo');
+  assert.ok(!valida(DURACION_MAX + DURACION_PASO), 'por encima del máximo');
+  assert.ok(!valida(50), 'fuera de la rejilla de quince minutos');
+});
+
+prueba('los tres tramos de duración parten la rejilla sin huecos ni solapes', () => {
+  // La misma comprobación existe en la app, sobre su propia copia de esta
+  // traducción. Están las dos a propósito: si una se mueve sin la otra, el
+  // adaptador simulado y la API devuelven listas distintas para el mismo chip.
+  const tramos = CHIP_DURACION.filter((c) => c !== 'Todas');
+  for (let m = DURACION_MIN; m <= DURACION_MAX; m += DURACION_PASO) {
+    const encajan = tramos.filter((chip) => {
+      const t = tramoDuracion(chip)!;
+      return m >= t.minimo && (t.maximo == null || m <= t.maximo);
+    });
+    assert.equal(encajan.length, 1, `${m} min encaja en ${encajan.length} tramos`);
+  }
+  assert.equal(tramoDuracion('Todas'), null);
 });
 
 prueba('la etiqueta de usuario concuerda en género', () => {

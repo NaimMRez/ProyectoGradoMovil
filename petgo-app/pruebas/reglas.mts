@@ -31,12 +31,19 @@ import {
 
 import {
   DIAS_VISIBLES,
+  DURACION_MAX,
+  DURACION_MIN,
+  DURACION_PASO,
   VENTANA_MS,
+  ajustarDuracion,
   combinar,
   diasElegibles,
   inicioDeDia,
   mismoDia,
+  dentroDelTramo,
   proximaMediaHora,
+  topesDuracion,
+  tramoDuracion,
 } from '../src/utiles/agenda.ts';
 
 import {
@@ -171,7 +178,12 @@ prueba('pluralización en español', () => {
 
 prueba('montos y duraciones', () => {
   assert.equal(bolivianos(45), 'Bs 45');
-  assert.equal(duracion(60), '60 min');
+  assert.equal(duracion(30), '30 min');
+  assert.equal(duracion(45), '45 min');
+  assert.equal(duracion(60), '1 h');
+  assert.equal(duracion(90), '1 h 30 min');
+  assert.equal(duracion(120), '2 h');
+  assert.equal(duracion(180), '3 h');
 });
 
 prueba('distancias con coma decimal, como en el handoff', () => {
@@ -269,6 +281,41 @@ prueba('pasada la última media hora del día, el arranque salta al día siguien
   // selector se abriría en hoy a las 00:00, que ya pasó.
   const arranque = proximaMediaHora(enPunto(27, 23, 45));
   assert.ok(mismoDia(inicioDeDia(arranque), enPunto(28, 0, 0)));
+});
+
+prueba('la barra de duración va de media hora a tres, en tramos de quince', () => {
+  const topes = topesDuracion();
+  assert.equal(topes.length, 11);
+  assert.equal(topes[0], DURACION_MIN);
+  assert.equal(topes[topes.length - 1], DURACION_MAX);
+  // Los 45 minutos de los chips viejos siguen siendo elegibles: es la razón de
+  // que el paso sea de quince y no de treinta.
+  assert.ok(topes.includes(45));
+  for (const t of topes) assert.equal(t % DURACION_PASO, 0);
+});
+
+prueba('cualquier minuto cae en el tope más cercano, sin salirse del rango', () => {
+  assert.equal(ajustarDuracion(30), 30);
+  assert.equal(ajustarDuracion(37), 30);
+  assert.equal(ajustarDuracion(38), 45);
+  assert.equal(ajustarDuracion(0), DURACION_MIN);
+  assert.equal(ajustarDuracion(999), DURACION_MAX);
+  // Lo importante: nunca devuelve algo que el servidor rechazaría.
+  for (let m = -20; m <= 300; m += 1) {
+    const v = ajustarDuracion(m);
+    assert.ok(v >= DURACION_MIN && v <= DURACION_MAX && v % DURACION_PASO === 0, `${m}`);
+  }
+});
+
+prueba('los tres tramos de duración parten la rejilla sin huecos ni solapes', () => {
+  // Es lo que sostiene el cambio del filtro del cuidador: antes era una
+  // igualdad exacta y un paseo de 45 minutos no aparecía bajo ningún chip.
+  const chips = ['Hasta 1 h', '1 a 2 h', 'Más de 2 h'];
+  for (const minutos of topesDuracion()) {
+    const encajan = chips.filter((c) => dentroDelTramo(minutos, tramoDuracion(c)!));
+    assert.equal(encajan.length, 1, `${minutos} min encaja en ${encajan.length} tramos`);
+  }
+  assert.equal(tramoDuracion('Todas'), null);
 });
 
 prueba('combinar toma el día de uno y la hora del otro, sin segundos', () => {

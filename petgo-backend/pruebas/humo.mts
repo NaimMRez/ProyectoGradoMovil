@@ -148,10 +148,10 @@ async function correr() {
     d.setDate(d.getDate() + dias);
     return d.toISOString();
   };
-  const borrador = (fechaHora: string) => ({
+  const borrador = (fechaHora: string, duracionMin = 60) => ({
     mascotaIds: [unaMascota],
     fechaHora,
-    duracionMin: 60,
+    duracionMin,
     pagoBs: 40,
     direccion: 'Av. América #1204, Sarco',
     zona: 'Sarco',
@@ -174,6 +174,20 @@ async function correr() {
   assert.equal(enElPasado.estado, 400);
   paso('una solicitud con fecha pasada se rechaza con 400');
 
+  const fueraDeRejilla = await pedir<Error_>('POST', '/requests', {
+    token: camila,
+    cuerpo: borrador(enDias(1), 50),
+  });
+  assert.equal(fueraDeRejilla.estado, 400, JSON.stringify(fueraDeRejilla.cuerpo));
+  paso('una duración fuera de los tramos de 15 min se rechaza con 400');
+
+  const demasiadoLargo = await pedir<Error_>('POST', '/requests', {
+    token: camila,
+    cuerpo: borrador(enDias(1), 240),
+  });
+  assert.equal(demasiadoLargo.estado, 400);
+  paso('un paseo de más de 3 horas se rechaza con 400');
+
   // Las mutaciones responden envueltas: el dato nuevo y el aviso que la app
   // va a mostrar.
   const dentroDePlazo = await pedir<{ datos: Solicitud; toast: string }>('POST', '/requests', {
@@ -183,6 +197,16 @@ async function correr() {
   assert.equal(dentroDePlazo.estado, 201, JSON.stringify(dentroDePlazo.cuerpo));
   assert.equal(dentroDePlazo.cuerpo.datos.estado, 'publicada');
   paso(`una dentro del plazo se crea publicada: "${dentroDePlazo.cuerpo.toast}"`);
+
+  // El paseo más largo que admite la barra, de punta a punta: se guarda y
+  // vuelve con la etiqueta en horas, no en 180 minutos.
+  const tresHoras = await pedir<{ datos: Solicitud; toast: string }>('POST', '/requests', {
+    token: camila,
+    cuerpo: borrador(enDias(2), 180),
+  });
+  assert.equal(tresHoras.estado, 201, JSON.stringify(tresHoras.cuerpo));
+  assert.equal(tresHoras.cuerpo.datos.duracionEtiqueta, '3 h');
+  paso('un paseo de 3 horas se crea y se rotula "3 h"');
 
   // ── 2 · Sus solicitudes ──────────────────────────────────────────────────
   const mias = await pedir<Solicitud[]>('GET', '/requests', { token: camila });
@@ -199,7 +223,7 @@ async function correr() {
 
   // El backend manda las etiquetas listas: la app no compone ninguna de éstas.
   assert.match(s1042.fechaEtiqueta, /^(Hoy|Mañana|Ayer|\w{3} \d+) · \d{2}:\d{2}$/);
-  assert.equal(s1042.duracionEtiqueta, '60 min');
+  assert.equal(s1042.duracionEtiqueta, '1 h');
   paso(`las etiquetas llegan formateadas: "${s1042.fechaEtiqueta}", "${s1042.duracionEtiqueta}"`);
 
   const finalPendiente = s1042.hitos.find((h) => h.clave === 'finalizada');

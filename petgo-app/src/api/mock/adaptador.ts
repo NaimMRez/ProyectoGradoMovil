@@ -43,6 +43,7 @@ import {
   plural,
   radioEnMetros,
 } from './formato';
+import { dentroDelTramo, tramoDuracion } from '../../utiles/agenda';
 import { distanciaEnMetros, origenDeBusqueda, type Punto } from '../../utiles/geo';
 import { emitirLocal } from '../tiempoReal';
 
@@ -262,8 +263,7 @@ export async function solicitudesCercanas(
 ): Promise<Solicitud[]> {
   const radio = radioEnMetros(filtros.distancia);
   const pagoMin = pagoMinimo(filtros.pago);
-  const duracionExacta =
-    filtros.duracion === 'Todas' ? null : Number.parseInt(filtros.duracion, 10);
+  const tramo = tramoDuracion(filtros.duracion);
 
   const ahora = new Date();
   const finDeSemana = new Date(ahora);
@@ -283,7 +283,7 @@ export async function solicitudesCercanas(
     .filter(({ metros }) => metros <= radio)
     .filter(({ solicitud }) => (pagoMin == null ? true : solicitud.pagoBs >= pagoMin))
     .filter(({ solicitud }) =>
-      duracionExacta == null ? true : solicitud.duracionMin === duracionExacta,
+      tramo == null ? true : dentroDelTramo(solicitud.duracionMin, tramo),
     )
     .filter(({ solicitud }) => {
       if (filtros.fecha === 'Hoy') return diaRelativo(solicitud.fechaHora) === 'Hoy';
