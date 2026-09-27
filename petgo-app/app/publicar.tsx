@@ -36,15 +36,13 @@ function enDias(dias: number, hh: number, mm: number): Date {
 }
 
 /**
- * Los dos atajos del handoff. Ya no son cadenas fijas: producen fechas reales,
- * y su etiqueta sale del mismo formateador que usa el resto de la app, así que
- * "Hoy · 17:30" sigue diciendo "Hoy" pasada la medianoche sin quedarse
- * mintiendo.
+ * Fecha propuesta al abrir el asistente: hoy a las 17:30.
+ *
+ * El formulario arranca con una fecha puesta y no en blanco, porque el
+ * selector no admite fechas pasadas y así el paso es válido desde el primer
+ * momento. El usuario la cambia con el único botón que hay.
  */
-const ATAJOS = [
-  { crear: () => enDias(0, 17, 30) },
-  { crear: () => enDias(1, 8, 0) },
-];
+const FECHA_INICIAL = () => enDias(0, 17, 30);
 
 /** Punto de recogida por defecto: la dirección de la dueña del seed. */
 const UBICACION_INICIAL = {
@@ -124,7 +122,7 @@ export default function Publicar() {
 
   const [paso, setPaso] = useState(0);
   const [elegidas, setElegidas] = useState<string[]>([]);
-  const [fecha, setFecha] = useState<Date>(() => ATAJOS[0].crear());
+  const [fecha, setFecha] = useState<Date>(FECHA_INICIAL);
   const [duracion, setDuracion] = useState('60 min');
   const [pago, setPago] = useState('');
   const [direccion, setDireccion] = useState(UBICACION_INICIAL.direccion);
@@ -327,30 +325,16 @@ export default function Publicar() {
 
             <View>
               <Etiqueta>Fecha y hora</Etiqueta>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espacio.md }}>
-                {ATAJOS.map((atajo) => {
-                  const opcion = atajo.crear();
-                  const etiqueta = fechaHora(opcion);
-                  return (
-                    <Chip
-                      key={etiqueta}
-                      etiqueta={etiqueta}
-                      activo={cuandoEtiqueta === etiqueta}
-                      onPress={() => setFecha(opcion)}
-                    />
-                  );
-                })}
-                <Chip
-                  etiqueta={
-                    ATAJOS.some((a) => fechaHora(a.crear()) === cuandoEtiqueta)
-                      ? 'Elegir fecha'
-                      : cuandoEtiqueta
-                  }
-                  icono="event"
-                  activo={!ATAJOS.some((a) => fechaHora(a.crear()) === cuandoEtiqueta)}
-                  onPress={selectorFecha.abrir}
-                />
-              </View>
+              {/* Un solo control. Muestra la fecha elegida en vez de un rótulo
+                  fijo: es el único sitio donde se ve qué día quedó puesto, y un
+                  botón que dijera siempre "Elegir fecha" escondería el dato que
+                  el usuario acaba de decidir. */}
+              <Chip
+                etiqueta={cuandoEtiqueta}
+                icono="event"
+                activo
+                onPress={selectorFecha.abrir}
+              />
             </View>
 
             <View>
