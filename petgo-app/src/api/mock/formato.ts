@@ -18,7 +18,14 @@ export function enBolivia(fecha: Date): Date {
   return new Date(utc + DESPLAZAMIENTO_BOLIVIA_MIN * 60_000);
 }
 
-const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+/**
+ * Nombres cortos de los días, de domingo a sábado — el orden de `getDay()`.
+ *
+ * Está exportado porque el selector de fecha rotula con ellos la tira de días,
+ * y las dos etiquetas conviven en la misma pantalla: si cada sitio tuviera su
+ * propia lista, un día podría leerse "Mié" en la tira y "Mie" en el resumen.
+ */
+export const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] as const;
 
 function dosDigitos(n: number): string {
   return n.toString().padStart(2, '0');
@@ -50,7 +57,7 @@ export function diaRelativo(fecha: Date, ahora = new Date()): string {
   if (mismoDia(f, hoy)) return 'Hoy';
   if (mismoDia(f, manana)) return 'Mañana';
   if (mismoDia(f, ayer)) return 'Ayer';
-  return `${DIAS[f.getDay()]} ${f.getDate()}`;
+  return `${DIAS_CORTOS[f.getDay()]} ${f.getDate()}`;
 }
 
 /** "Hoy · 17:30". */

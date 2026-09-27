@@ -30,6 +30,16 @@ import {
 } from '../src/api/mock/formato.ts';
 
 import {
+  DIAS_VISIBLES,
+  VENTANA_MS,
+  combinar,
+  diasElegibles,
+  inicioDeDia,
+  mismoDia,
+  proximaMediaHora,
+} from '../src/utiles/agenda.ts';
+
+import {
   CENTRO_CERCADO,
   distanciaEnMetros,
   estaEnElCercado,
@@ -213,6 +223,60 @@ prueba('el origen de búsqueda cae al centro del Cercado fuera de Cochabamba', (
   const sinPermiso = origenDeBusqueda(null);
   assert.equal(sinPermiso.esReal, false);
   assert.deepEqual(sinPermiso.origen, CENTRO_CERCADO);
+});
+
+
+console.log('\nAgenda de paseos\n');
+
+/** Un instante concreto, para que las pruebas no dependan de la hora de correrlas. */
+const enPunto = (dia: number, h: number, m: number) => new Date(2026, 8, dia, h, m, 0, 0);
+
+prueba('la tira ofrece siete días, el primero es hoy y cruza el fin de mes', () => {
+  // Arrancar el 27 de septiembre no es casual: la tira acaba en octubre, que
+  // es lo que obliga al rótulo del mes a seguir al día elegido en vez de ser
+  // fijo.
+  const dias = diasElegibles(enPunto(27, 18, 0));
+  assert.equal(dias.length, DIAS_VISIBLES);
+  assert.ok(mismoDia(dias[0], enPunto(27, 0, 0)));
+  assert.ok(mismoDia(dias[6], new Date(2026, 9, 3)));
+});
+
+prueba('todos los días de la tira caben en la ventana del servidor, a cualquier hora', () => {
+  // Es la razón de que la tira llegue a hoy+6 y no a hoy+7: el último día
+  // tiene que ser válido también en su hora más tardía, y desde cualquier
+  // hora de hoy. Con hoy+7 dejaría de serlo en cuanto pasara la medianoche.
+  for (const minuto of [0, 1, 12 * 60, 23 * 60 + 59]) {
+    const ahora = new Date(2026, 8, 27, 0, 0, 0, 0);
+    ahora.setMinutes(minuto);
+    const ultimo = diasElegibles(ahora)[DIAS_VISIBLES - 1];
+    const masTarde = combinar(ultimo, new Date(2026, 8, 27, 23, 59));
+    assert.ok(masTarde.getTime() - ahora.getTime() <= VENTANA_MS);
+    assert.ok(masTarde.getTime() > ahora.getTime());
+  }
+});
+
+prueba('la hora de arranque siempre queda por delante y en media hora en punto', () => {
+  for (const [h, m] of [[18, 0], [18, 1], [18, 29], [18, 30], [18, 31], [23, 45]]) {
+    const ahora = enPunto(27, h, m);
+    const propuesta = proximaMediaHora(ahora);
+    assert.ok(propuesta.getTime() > ahora.getTime());
+    assert.ok(propuesta.getMinutes() === 0 || propuesta.getMinutes() === 30);
+  }
+});
+
+prueba('pasada la última media hora del día, el arranque salta al día siguiente', () => {
+  // Si el día se tomara de `new Date()` y la hora de aquí, a las 23:45 el
+  // selector se abriría en hoy a las 00:00, que ya pasó.
+  const arranque = proximaMediaHora(enPunto(27, 23, 45));
+  assert.ok(mismoDia(inicioDeDia(arranque), enPunto(28, 0, 0)));
+});
+
+prueba('combinar toma el día de uno y la hora del otro, sin segundos', () => {
+  const elegido = combinar(enPunto(30, 0, 0), enPunto(27, 17, 30));
+  assert.equal(elegido.getDate(), 30);
+  assert.equal(elegido.getHours(), 17);
+  assert.equal(elegido.getMinutes(), 30);
+  assert.equal(elegido.getSeconds(), 0);
 });
 
 console.log(`\n${ok} comprobaciones pasaron.\n`);

@@ -92,6 +92,16 @@ console.log('── BANDA DE LIMA DE LA TARJETA DE MASCOTA ──');
 ok('nombre sobre la lima', val('texto', 'tarjeta'), LIMA, TEXTO_MIN);
 ok('raza sobre la lima', val('texto', 'terciario'), LIMA, TEXTO_MIN);
 
+console.log('── SELECTOR DE FECHA Y HORA ──');
+// La tira de días vive dentro del sheet, que es blanco. El día elegido se
+// pinta de menta y los otros seis van sin relleno, así que hay dos fondos.
+ok('número del día elegido', val('texto', 'sobreAccion'), MENTA, TEXTO_MIN);
+ok('abreviatura del día elegido', val('texto', 'sobreAccion'), MENTA, TEXTO_MIN);
+ok('número de un día sin elegir', val('texto', 'principal'), TARJETA, TEXTO_MIN);
+ok('abreviatura de un día sin elegir', val('texto', 'terciario'), TARJETA, TEXTO_MIN);
+// El aviso de hora pasada es lo único rojo del sheet.
+ok('aviso de hora pasada', val('intencion', 'destructivoTexto'), TARJETA, TEXTO_MIN);
+
 console.log('── DEGRADADO DEL BOTÓN DE PUBLICAR ──');
 // La tinta es la misma en todo el botón, así que se mide en sus dos extremos,
 // no sólo en el más favorable.

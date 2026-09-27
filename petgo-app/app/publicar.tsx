@@ -13,7 +13,7 @@ import { CabeceraDetalle } from '../src/components/Pantalla';
 import PhotoPlaceholder from '../src/components/PhotoPlaceholder';
 import PressableScale from '../src/components/PressableScale';
 import { Skeleton } from '../src/components/Skeleton';
-import { DIAS_MAXIMOS, useSelectorFechaHora } from '../src/components/SelectorFechaHora';
+import { useSelectorFechaHora } from '../src/components/SelectorFechaHora';
 import Texto from '../src/components/Texto';
 import EmptyState from '../src/components/EmptyState';
 import { useCrearSolicitud, useMascotas } from '../src/api/hooks';
@@ -22,6 +22,7 @@ import { useToast } from '../src/estado/toast';
 import { borde, superficie, texto, verde } from '../src/theme/colors';
 import { espacio, radio } from '../src/theme/layout';
 import { curvaCSS, duracion as duracionMotion } from '../src/theme/motion';
+import { DIAS_MAXIMOS } from '../src/utiles/agenda';
 
 const PASOS = ['Mascotas', 'Cuándo y cuánto', 'Ubicación'] as const;
 const DURACIONES = ['30 min', '45 min', '60 min', '90 min'];
@@ -327,9 +328,9 @@ export default function Publicar() {
                 activo={Boolean(fecha)}
                 onPress={selectorFecha.abrir}
               />
-              {/* El selector ya impide salirse del plazo, pero conviene decirlo
-                  antes de abrirlo: un calendario con días atenuados y sin
-                  explicación se lee como un fallo. */}
+              {/* El selector sólo enseña los días dentro del plazo, así que
+                  no hay nada atenuado que delate el límite. Conviene decirlo
+                  antes de abrirlo, o la tira corta se lee como un fallo. */}
               <Texto
                 variante="caption"
                 color={texto.terciario}
