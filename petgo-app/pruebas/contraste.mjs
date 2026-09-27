@@ -98,18 +98,14 @@ console.log('── DEGRADADO DEL BOTÓN DE PUBLICAR ──');
 excepcion(
   'tinta blanca en el extremo izquierdo',
   '#ffffff', val('verde', 'publicarInicio'), TEXTO_MIN,
-  'texto blanco sobre el degradado, pedido de forma expresa; texto.sobreAccion daría 7,8:1',
+  'texto blanco sobre el degradado, pedido de forma expresa; texto.sobreAccion pasaría con holgura',
 );
 excepcion(
   'tinta blanca en el extremo derecho',
   '#ffffff', val('verde', 'publicarFin'), TEXTO_MIN,
-  'texto blanco sobre el degradado, pedido de forma expresa; texto.sobreAccion daría 6,9:1',
+  'texto blanco sobre el degradado, pedido de forma expresa; texto.sobreAccion pasaría con holgura',
 );
-excepcion(
-  'el degradado se aprecia',
-  val('verde', 'publicarInicio'), val('verde', 'publicarFin'), 1.15,
-  'los dos extremos se diferencian en saturación más que en claridad, y esta cuenta sólo mide claridad',
-);
+ok('el degradado se aprecia', val('verde', 'publicarInicio'), val('verde', 'publicarFin'), 1.15);
 
 console.log('── BLANCO SOBRE LOS VERDES PROFUNDOS ──');
 for (const k of ['heroe', 'profundo', 'splashInicio', 'splashFin'])
