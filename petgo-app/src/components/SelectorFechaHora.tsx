@@ -24,24 +24,29 @@ import { espacio } from '../theme/layout';
  *
  * Se expone una sola función, `abrir()`, y cada plataforma hace lo suyo por
  * dentro.
+ *
+ * `valor` admite `null` para el caso en que todavía no se ha elegido nada. La
+ * rueda tiene que arrancar en algún sitio, y ese sitio es ahora mismo — que es
+ * además el primer instante seleccionable, porque el selector no admite
+ * fechas pasadas.
  */
 export function useSelectorFechaHora(
-  valor: Date,
+  valor: Date | null,
   onElegir: (fecha: Date) => void,
 ) {
   // Sólo iOS necesita estado: en Android el diálogo es del sistema.
   const [abiertoIOS, setAbiertoIOS] = useState(false);
-  const [borrador, setBorrador] = useState(valor);
+  const [borrador, setBorrador] = useState(() => valor ?? new Date());
 
   const abrir = () => {
     if (Platform.OS !== 'android') {
-      setBorrador(valor);
+      setBorrador(valor ?? new Date());
       setAbiertoIOS(true);
       return;
     }
 
     DateTimePickerAndroid.open({
-      value: valor,
+      value: valor ?? new Date(),
       mode: 'date',
       // No tiene sentido agendar un paseo para ayer.
       minimumDate: new Date(),

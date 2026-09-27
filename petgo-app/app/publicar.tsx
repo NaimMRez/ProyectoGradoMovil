@@ -27,23 +27,6 @@ const PASOS = ['Mascotas', 'Cuándo y cuánto', 'Ubicación'] as const;
 const DURACIONES = ['30 min', '45 min', '60 min', '90 min'];
 const PAGO_SUGERIDO = 40;
 
-/** Hoy o dentro de N días, a una hora concreta. */
-function enDias(dias: number, hh: number, mm: number): Date {
-  const d = new Date();
-  d.setDate(d.getDate() + dias);
-  d.setHours(hh, mm, 0, 0);
-  return d;
-}
-
-/**
- * Fecha propuesta al abrir el asistente: hoy a las 17:30.
- *
- * El formulario arranca con una fecha puesta y no en blanco, porque el
- * selector no admite fechas pasadas y así el paso es válido desde el primer
- * momento. El usuario la cambia con el único botón que hay.
- */
-const FECHA_INICIAL = () => enDias(0, 17, 30);
-
 /** Punto de recogida por defecto: la dirección de la dueña del seed. */
 const UBICACION_INICIAL = {
   direccion: 'Av. América #1204, Sarco',
@@ -122,14 +105,15 @@ export default function Publicar() {
 
   const [paso, setPaso] = useState(0);
   const [elegidas, setElegidas] = useState<string[]>([]);
-  const [fecha, setFecha] = useState<Date>(FECHA_INICIAL);
+  const [fecha, setFecha] = useState<Date | null>(null);
   const [duracion, setDuracion] = useState('60 min');
   const [pago, setPago] = useState('');
   const [direccion, setDireccion] = useState(UBICACION_INICIAL.direccion);
   const [notas, setNotas] = useState('');
 
   const selectorFecha = useSelectorFechaHora(fecha, setFecha);
-  const cuandoEtiqueta = fechaHora(fecha);
+  // Sin fecha no hay etiqueta que mostrar: el botón invita a elegirla.
+  const cuandoEtiqueta = fecha ? fechaHora(fecha) : 'Elegir fecha y hora';
 
   const nombresElegidos = useMemo(
     () =>
@@ -145,6 +129,10 @@ export default function Publicar() {
     );
 
   const publicar = () => {
+    // No se llega aquí sin fecha — el paso 2 no deja avanzar sin ella —, pero
+    // el tipo lo permite y una publicación sin fecha sería un registro roto.
+    if (!fecha) return;
+
     const monto = Number.parseInt(pago, 10);
     const minutos = Number.parseInt(duracion, 10);
 
@@ -179,6 +167,10 @@ export default function Publicar() {
     }
 
     if (paso === 1) {
+      if (!fecha) {
+        mostrar('Elige la fecha y la hora del paseo', { tono: 'aviso', sobreTabs: false });
+        return;
+      }
       if (!pago.trim() || Number.parseInt(pago, 10) <= 0) {
         mostrar('Indica cuánto ofreces por el paseo', { tono: 'aviso', sobreTabs: false });
         return;
@@ -325,14 +317,14 @@ export default function Publicar() {
 
             <View>
               <Etiqueta>Fecha y hora</Etiqueta>
-              {/* Un solo control. Muestra la fecha elegida en vez de un rótulo
-                  fijo: es el único sitio donde se ve qué día quedó puesto, y un
-                  botón que dijera siempre "Elegir fecha" escondería el dato que
-                  el usuario acaba de decidir. */}
+              {/* Un solo control, que hace de invitación y de respuesta: dice
+                  "Elegir fecha y hora" mientras no hay nada, y pasa a mostrar
+                  lo elegido en cuanto lo hay. Es el único sitio donde se ve qué
+                  día quedó puesto, así que un rótulo fijo escondería el dato. */}
               <Chip
                 etiqueta={cuandoEtiqueta}
                 icono="event"
-                activo
+                activo={Boolean(fecha)}
                 onPress={selectorFecha.abrir}
               />
             </View>
@@ -467,7 +459,7 @@ export default function Publicar() {
 
               {[
                 ['Mascotas', unirNombres(nombresElegidos) || '—'],
-                ['Fecha', cuandoEtiqueta],
+                ['Fecha', fecha ? fechaHora(fecha) : '—'],
                 ['Duración', duracion],
                 ['Remuneración', pago ? `Bs ${pago}` : '—'],
                 ['Recogida', direccion],
