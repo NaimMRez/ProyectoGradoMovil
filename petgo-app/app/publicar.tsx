@@ -13,7 +13,7 @@ import { CabeceraDetalle } from '../src/components/Pantalla';
 import PhotoPlaceholder from '../src/components/PhotoPlaceholder';
 import PressableScale from '../src/components/PressableScale';
 import { Skeleton } from '../src/components/Skeleton';
-import { useSelectorFechaHora } from '../src/components/SelectorFechaHora';
+import { DIAS_MAXIMOS, useSelectorFechaHora } from '../src/components/SelectorFechaHora';
 import Texto from '../src/components/Texto';
 import EmptyState from '../src/components/EmptyState';
 import { useCrearSolicitud, useMascotas } from '../src/api/hooks';
@@ -327,6 +327,16 @@ export default function Publicar() {
                 activo={Boolean(fecha)}
                 onPress={selectorFecha.abrir}
               />
+              {/* El selector ya impide salirse del plazo, pero conviene decirlo
+                  antes de abrirlo: un calendario con días atenuados y sin
+                  explicación se lee como un fallo. */}
+              <Texto
+                variante="caption"
+                color={texto.terciario}
+                style={{ marginTop: espacio.md }}
+              >
+                {`Hasta ${DIAS_MAXIMOS} días de antelación.`}
+              </Texto>
             </View>
 
             <View>

@@ -103,6 +103,26 @@ export type FiltroLista = z.infer<typeof listaSolicitudesSchema>;
 
 // ── Crear solicitud ─────────────────────────────────────────────────────────
 
+/**
+ * Hasta cuántos días por delante se puede agendar un paseo.
+ *
+ * Existe para que la lista del cuidador no se llene de solicitudes lejanas que
+ * nadie va a atender hoy. Una semana cubre la planificación real de una
+ * jornada laboral o académica, que es el caso que la app resuelve.
+ */
+export const DIAS_MAXIMOS = 7;
+
+/**
+ * Cuánto se tolera que la fecha quede por detrás del reloj.
+ *
+ * La app no deja elegir una hora pasada, pero entre elegirla y terminar el
+ * formulario — la ubicación y el resumen — pasan minutos. Sin esta holgura, un
+ * paseo agendado "ahora mismo" sería rechazado por tardar en publicarlo.
+ */
+const TOLERANCIA_MS = 30 * 60 * 1000;
+
+const DIA_MS = 24 * 60 * 60 * 1000;
+
 export const crearSolicitudSchema = z.object({
   /** Una solicitud puede llevar varias mascotas; al menos una. */
   mascotaIds: z
@@ -110,7 +130,20 @@ export const crearSolicitudSchema = z.object({
     .min(1, 'Selecciona al menos una mascota')
     .max(5, 'Como máximo cinco mascotas por paseo'),
 
-  fechaHora: z.coerce.date(),
+  /**
+   * La comprobación vive aquí y no sólo en el selector de la app: el servidor
+   * no puede fiarse de que quien llama sea la app.
+   */
+  fechaHora: z.coerce
+    .date()
+    .refine(
+      (d) => d.getTime() >= Date.now() - TOLERANCIA_MS,
+      'La fecha del paseo ya pasó',
+    )
+    .refine(
+      (d) => d.getTime() <= Date.now() + DIAS_MAXIMOS * DIA_MS,
+      `Sólo se pueden agendar paseos con ${DIAS_MAXIMOS} días de antelación como máximo`,
+    ),
 
   duracionMin: z
     .number()

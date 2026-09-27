@@ -11,6 +11,20 @@ import { texto, verde } from '../theme/colors';
 import { espacio } from '../theme/layout';
 
 /**
+ * Hasta cuántos días por delante se puede agendar un paseo.
+ *
+ * Tiene que coincidir con `DIAS_MAXIMOS` del backend, que es quien manda: el
+ * selector evita que el usuario llegue a elegir una fecha inválida, pero la
+ * que decide si una solicitud se guarda es la validación del servidor.
+ */
+export const DIAS_MAXIMOS = 7;
+
+const DIA_MS = 24 * 60 * 60 * 1000;
+
+/** El último instante agendable, contado desde ahora. */
+const maximo = () => new Date(Date.now() + DIAS_MAXIMOS * DIA_MS);
+
+/**
  * Selector nativo de fecha y hora.
  *
  * Las dos plataformas lo resuelven de forma tan distinta que un único
@@ -48,8 +62,9 @@ export function useSelectorFechaHora(
     DateTimePickerAndroid.open({
       value: valor ?? new Date(),
       mode: 'date',
-      // No tiene sentido agendar un paseo para ayer.
+      // No tiene sentido agendar un paseo para ayer, ni para dentro de un mes.
       minimumDate: new Date(),
+      maximumDate: maximo(),
       onChange: (evento: DateTimePickerEvent, fecha?: Date) => {
         if (evento.type !== 'set' || !fecha) return;
 
@@ -87,6 +102,7 @@ export function useSelectorFechaHora(
             mode="datetime"
             display="spinner"
             minimumDate={new Date()}
+            maximumDate={maximo()}
             accentColor={verde.primario}
             onChange={(_evento, fecha) => {
               if (fecha) setBorrador(fecha);

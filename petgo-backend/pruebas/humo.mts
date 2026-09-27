@@ -51,7 +51,14 @@ async function pedir<T = unknown>(
   return { estado: respuesta.status, cuerpo: cuerpo as T };
 }
 
-type Usuario = { id: string; nombre: string; primerNombre: string; rol: string; metaEtiqueta: string };
+type Usuario = {
+  id: string;
+  nombre: string;
+  primerNombre: string;
+  rol: string;
+  metaEtiqueta: string;
+  paseosCompletados: number | null;
+};
 type Sesion = { usuario: Usuario; token: string };
 type Solicitud = {
   id: string;
@@ -127,6 +134,55 @@ async function correr() {
   });
   assert.equal(repetido.estado, 409);
   paso('un correo ya registrado se rechaza con 409');
+
+  // ── 1c · El plazo para agendar ───────────────────────────────────────────
+  // El selector de la app ya impide salirse del plazo, pero el servidor no
+  // puede fiarse de que quien llama sea la app.
+  const mascotasCamila = await pedir<{ id: string }[]>('GET', '/pets', { token: camila });
+  assert.equal(mascotasCamila.estado, 200);
+  const unaMascota = mascotasCamila.cuerpo[0]?.id;
+  assert.ok(unaMascota, 'Camila debería tener mascotas sembradas');
+
+  const enDias = (dias: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + dias);
+    return d.toISOString();
+  };
+  const borrador = (fechaHora: string) => ({
+    mascotaIds: [unaMascota],
+    fechaHora,
+    duracionMin: 60,
+    pagoBs: 40,
+    direccion: 'Av. América #1204, Sarco',
+    zona: 'Sarco',
+    lat: -17.383,
+    lng: -66.175,
+    notas: '',
+  });
+
+  const muyLejos = await pedir<Error_>('POST', '/requests', {
+    token: camila,
+    cuerpo: borrador(enDias(8)),
+  });
+  assert.equal(muyLejos.estado, 400, JSON.stringify(muyLejos.cuerpo));
+  paso('una solicitud a más de 7 días se rechaza con 400');
+
+  const enElPasado = await pedir<Error_>('POST', '/requests', {
+    token: camila,
+    cuerpo: borrador(enDias(-1)),
+  });
+  assert.equal(enElPasado.estado, 400);
+  paso('una solicitud con fecha pasada se rechaza con 400');
+
+  // Las mutaciones responden envueltas: el dato nuevo y el aviso que la app
+  // va a mostrar.
+  const dentroDePlazo = await pedir<{ datos: Solicitud; toast: string }>('POST', '/requests', {
+    token: camila,
+    cuerpo: borrador(enDias(3)),
+  });
+  assert.equal(dentroDePlazo.estado, 201, JSON.stringify(dentroDePlazo.cuerpo));
+  assert.equal(dentroDePlazo.cuerpo.datos.estado, 'publicada');
+  paso(`una dentro del plazo se crea publicada: "${dentroDePlazo.cuerpo.toast}"`);
 
   // ── 2 · Sus solicitudes ──────────────────────────────────────────────────
   const mias = await pedir<Solicitud[]>('GET', '/requests', { token: camila });
