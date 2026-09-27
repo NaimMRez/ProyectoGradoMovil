@@ -25,6 +25,13 @@ const val = (bloque, clave) => {
 const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
 const L = (h) => { const n = parseInt(h.slice(1), 16); return 0.2126 * lin(n >> 16 & 255) + 0.7152 * lin(n >> 8 & 255) + 0.0722 * lin(n & 255); };
 const R = (a, b) => { const [x, y] = [L(a), L(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+/** Mezcla `a` sobre `b`. `alfa` es cuánto pesa `a`. Para medir lo que se ve
+ *  cuando algo se pinta con opacidad por debajo de 1. */
+const mezclar = (a, b, alfa) => {
+  const [A, B] = [parseInt(a.slice(1), 16), parseInt(b.slice(1), 16)];
+  const canal = (d) => Math.round(((A >> d) & 255) * alfa + ((B >> d) & 255) * (1 - alfa));
+  return '#' + [16, 8, 0].map((d) => canal(d).toString(16).padStart(2, '0')).join('');
+};
 
 let fallos = 0, total = 0;
 const excepciones = [];
@@ -119,6 +126,22 @@ ok('número de un día sin elegir', val('texto', 'principal'), TARJETA, TEXTO_MI
 ok('abreviatura de un día sin elegir', val('texto', 'terciario'), TARJETA, TEXTO_MIN);
 // El aviso de hora pasada es lo único rojo del sheet.
 ok('aviso de hora pasada', val('intencion', 'destructivoTexto'), TARJETA, TEXTO_MIN);
+
+console.log('── BOTÓN PRIMARIO DESHABILITADO ──');
+// `PressableScale` apaga al 45 % cualquier control deshabilitado, así que lo
+// que se ve es la mezcla con lo que haya debajo. El primer sitio donde eso
+// pesa es el pie del asistente de publicación: un botón primario a ancho
+// completo sobre el fondo de la app, apagado hasta que se elige una mascota.
+const APAGADO = 0.45;
+const RELLENO_APAGADO = mezclar(MENTA, FONDO, APAGADO);
+ok('el botón apagado se sigue viendo', RELLENO_APAGADO, FONDO, SUP_MIN);
+excepcion(
+  'la etiqueta del botón apagado',
+  mezclar(val('texto', 'sobreAccion'), FONDO, APAGADO),
+  RELLENO_APAGADO,
+  TEXTO_MIN,
+  'control inactivo, exento en la WCAG 1.4.3: un botón apagado tiene que leerse como apagado, y el aviso de arriba dice qué falta',
+);
 
 console.log('── DEGRADADO DEL BOTÓN DE PUBLICAR ──');
 // La tinta es la misma en todo el botón, así que se mide en sus dos extremos,

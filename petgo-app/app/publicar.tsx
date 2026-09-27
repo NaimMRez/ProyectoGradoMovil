@@ -164,10 +164,9 @@ export default function Publicar() {
 
   const avanzar = () => {
     if (paso === 0) {
-      if (elegidas.length === 0) {
-        mostrar('Selecciona al menos una mascota', { tono: 'aviso', sobreTabs: false });
-        return;
-      }
+      // El botón está deshabilitado mientras no haya ninguna elegida, así que
+      // aquí no se llega. Queda como red por si el pie dejara de mirarlo.
+      if (faltaMascota) return;
       setPaso(1);
       return;
     }
@@ -192,6 +191,17 @@ export default function Publicar() {
     if (paso === 0) router.back();
     else setPaso(paso - 1);
   };
+
+  /**
+   * El primer paso está incompleto.
+   *
+   * Es lo único que apaga el botón del pie. Los otros dos pasos siguen
+   * avisando con un toast al intentar avanzar, y la diferencia no es un
+   * descuido: aquí falta **una** cosa y el aviso de debajo ya la nombra, así
+   * que un botón apagado se explica solo. El paso 2 tiene dos condiciones —
+   * la fecha y el monto — y apagarlo no diría cuál de las dos falta.
+   */
+  const faltaMascota = elegidas.length === 0;
 
   const avisoRecuento =
     elegidas.length === 0
@@ -517,6 +527,7 @@ export default function Publicar() {
           completo
           haptico={paso === 2 ? 'exito' : false}
           cargando={crear.isPending}
+          disabled={paso === 0 && faltaMascota}
           onPress={avanzar}
         />
       </View>
