@@ -15,9 +15,14 @@ import Constants from 'expo-constants';
  * `false` apunta la app al backend real. Ninguna pantalla se entera.
  *
  * Con `true` la app corre entera contra el adaptador en memoria: sin Postgres,
- * sin servidor y sin red.
+ * sin servidor y sin red, y **sin guardar nada** — lo que se publica vive
+ * hasta la siguiente recarga del bundle.
+ *
+ * En `false` hacen falta tres cosas encendidas: Postgres, `npm run dev` en el
+ * backend, y el teléfono en la misma red wifi que el Mac. Si alguna falla, la
+ * app no se rompe: las pantallas caen a su estado de error con reintento.
  */
-export const USAR_MOCK = true;
+export const USAR_MOCK = false;
 
 /** Puerto en el que escucha el backend. Tiene que coincidir con su `.env`. */
 const PUERTO_API = 4000;
