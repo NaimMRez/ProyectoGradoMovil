@@ -1,8 +1,9 @@
 import { forwardRef, type ReactNode } from 'react';
 import { Platform, View, type StyleProp, type ViewStyle } from 'react-native';
-import MapView, { Marker, UrlTile, type Region } from 'react-native-maps';
+import MapView, { Marker, type MapStyleElement, type Region } from 'react-native-maps';
 import { superficie, texto, verde } from '../theme/colors';
 import { profundidad, radio } from '../theme/layout';
+import Icono from './Icono';
 import Texto from './Texto';
 
 /** Centro del Cercado de Cochabamba. */
@@ -33,6 +34,33 @@ export function regionCercana(lat: number, lng: number): Region {
   return { latitude: lat, longitude: lng, latitudeDelta: 0.012, longitudeDelta: 0.012 };
 }
 
+/**
+ * Estilo del mapa en Android.
+ *
+ * Reproduce sobre Google Maps la base gris muy clara que antes venían a dar
+ * unos tiles de terceros: sin color, sin puntos de interés y sin transporte,
+ * para que lo único con color en pantalla sean los marcadores de PetGo.
+ *
+ * En iOS no se usa — Apple Maps no admite estilos — y su equivalente es
+ * `mapType="mutedStandard"`, que es la base desaturada que trae el sistema.
+ * Los dos grises no son idénticos, y esa diferencia es el precio de que cada
+ * plataforma use su mapa nativo en vez de arrastrar un SDK ajeno.
+ */
+const ESTILO_ANDROID: MapStyleElement[] = [
+  { elementType: 'geometry', stylers: [{ saturation: -100 }, { lightness: 20 }] },
+  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { elementType: 'labels.text.fill', stylers: [{ saturation: -100 }, { lightness: -25 }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+  // Los negocios y parques con nombre llenan el mapa de rótulos que compiten
+  // con los marcadores. Las calles sí se quedan: son lo que orienta.
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#f7f7f5' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f2f2ef' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e4e7e6' }] },
+];
+
 export type MapaProps = {
   region?: Region;
   /**
@@ -55,24 +83,30 @@ export type MapaProps = {
 /**
  * Mapa base.
  *
- * Los tiles vienen de **CartoDB Positron**, no del estilo por defecto. Es una
- * base gris muy clara: sobre ella los marcadores verdes de PetGo destacan, y
- * sobre el mapa de calles habitual se pierden entre los rótulos.
+ * La base es gris muy clara y sin puntos de interés, para que lo único con
+ * color en pantalla sean los marcadores de PetGo. Sobre el mapa de calles
+ * habitual se perderían entre los rótulos.
  *
- * En Android se desactiva la base nativa con `mapType="none"` y quedan sólo
- * los tiles. En iOS ese modo no existe, así que los tiles se dibujan encima
- * del mapa de Apple — son opacos, de modo que el resultado es el mismo.
+ * Cada plataforma llega a ese gris con lo suyo: iOS con `mutedStandard`, que
+ * es la base desaturada de Apple, y Android con `ESTILO_ANDROID` sobre Google.
+ *
+ * **Antes ese gris lo daban unos tiles de CartoDB**, servidos por `UrlTile`
+ * sobre una base desactivada. Se quitaron cuando CartoDB empezó a exigir una
+ * API key y a estampar "API KEY REQUIRED" encima del mapa. Volver a un
+ * proveedor de tiles significaría una tercera clave, una tercera cuenta y la
+ * atribución de OpenStreetMap; el mapa nativo no pide nada de eso.
  *
  * **No se pasa `provider`**, y eso es deliberado. En Android sólo existe Google
- * Maps, así que el prop no cambia nada; en iOS, ponerlo en `PROVIDER_GOOGLE`
- * —como pide la documentación de Expo para quien quiera Google en iOS— nos
- * obligaría a una segunda clave y a habilitar el Maps SDK for iOS para no ver
- * nada, porque los tiles de CartoDB tapan la base. Sin el prop, iOS usa Apple
- * Maps, que no pide clave.
+ * Maps, así que el prop no cambiaría nada. En iOS, ponerlo en `PROVIDER_GOOGLE`
+ * exigiría enlazar el SDK de Google Maps y llamar a `GMSServices.provideAPIKey`
+ * en el AppDelegate; el plugin de Expo lo automatiza, pero durante el prebuild,
+ * tocando archivos nativos. **Expo Go es un binario ya compilado**, así que el
+ * mapa desaparecería del iPhone donde se desarrolla hasta hacer un development
+ * build — además de pedir una segunda clave y engordar el binario para dar lo
+ * que Apple ya da nativo. Sin el prop, iOS usa Apple Maps y no pide nada.
  *
- * Android sí la pide: aunque los tiles sean de CartoDB, el `MapView` va sobre
- * el SDK de Google y no monta sin una clave en el manifiesto. La pone el plugin
- * `react-native-maps` desde `app.json`
+ * Android sí pide clave: el `MapView` va sobre el SDK de Google y no monta sin
+ * ella en el manifiesto. La pone el plugin `react-native-maps` desde `app.json`
  * (`plugins.react-native-maps.androidGoogleMapsApiKey`). **En Expo Go no hace
  * falta** —Expo Go trae la suya—, sólo en un binario propio.
  */
@@ -92,7 +126,8 @@ export const Mapa = forwardRef<MapView, MapaProps>(function Mapa(
       ref={ref}
       style={[{ flex: 1 }, style]}
       initialRegion={region}
-      mapType={Platform.OS === 'android' ? 'none' : 'standard'}
+      mapType={Platform.OS === 'android' ? 'standard' : 'mutedStandard'}
+      customMapStyle={ESTILO_ANDROID}
       scrollEnabled={interactivo}
       zoomEnabled={interactivo}
       rotateEnabled={false}
@@ -103,12 +138,6 @@ export const Mapa = forwardRef<MapView, MapaProps>(function Mapa(
       showsMyLocationButton={false}
       onRegionChangeComplete={onRegionChangeComplete}
     >
-      <UrlTile
-        urlTemplate="https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png"
-        maximumZ={19}
-        flipY={false}
-        zIndex={-1}
-      />
       {children}
     </MapView>
   );
@@ -118,6 +147,9 @@ export const Mapa = forwardRef<MapView, MapaProps>(function Mapa(
  * Pin de ubicación: un punto verde con anillo blanco, anclado en su base.
  * Para los mapas de confirmación, donde sólo hay un punto.
  */
+/** Lado del disco del punto de recogida. */
+const LADO_MARCA = 36;
+
 /**
  * El disco del punto de recogida, sin mapa alrededor.
  *
@@ -127,22 +159,31 @@ export const Mapa = forwardRef<MapView, MapaProps>(function Mapa(
  * y el punto se queda quieto en el centro, así que va encima como una vista
  * normal. Si cada sitio lo dibujara por su cuenta, el mismo punto se vería de
  * dos formas distintas en dos pantallas seguidas.
+ *
+ * Lleva una huella y no un punto liso porque aquí no hay ningún dato que
+ * mostrar — es un sitio, no una cifra — y una huella dice qué se recoge. El
+ * aro blanco es lo que lo despega del mapa: la lima sobre una base gris muy
+ * clara se separa poco.
  */
 export function MarcaPunto() {
   return (
     <View
       style={[
         {
-          width: 22,
-          height: 22,
+          width: LADO_MARCA,
+          height: LADO_MARCA,
           borderRadius: radio.pastilla,
-          backgroundColor: verde.primario,
-          borderWidth: 4,
+          backgroundColor: verde.lima,
+          borderWidth: 3,
           borderColor: superficie.tarjeta,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         profundidad.marcador,
       ]}
-    />
+    >
+      <Icono nombre="pets" tamano={18} color={texto.sobreAccion} />
+    </View>
   );
 }
 
@@ -161,8 +202,16 @@ export function PinUbicacion({
 }
 
 /**
- * Marcador de precio. Es lo que el cuidador compara de un vistazo, así que la
- * etiqueta lleva el importe y no un alfiler genérico.
+ * Marcador del mapa del cuidador: huella e importe en la misma pastilla.
+ *
+ * La huella sola no bastaba. Lo que el cuidador hace en este mapa es comparar
+ * cuánto pagan sin tocar nada, y un alfiler genérico le obliga a abrir uno por
+ * uno; llevando las dos cosas, la comparación se mantiene y el mapa se lee
+ * como de PetGo y no como un mapa cualquiera con chinchetas.
+ *
+ * El activo se pinta de lima. Es el color de resaltado del sistema — el mismo
+ * de la banda del nombre de la mascota — y contra la menta del resto se separa
+ * por claridad, no sólo por tono.
  */
 export function MarcadorPrecio({
   latitude,
@@ -190,19 +239,26 @@ export function MarcadorPrecio({
       <View
         style={[
           {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 5,
             paddingVertical: 6,
-            paddingHorizontal: 9,
-            borderRadius: radio.md,
-            backgroundColor: activo ? verde.profundo : verde.primario,
+            paddingLeft: 7,
+            paddingRight: 10,
+            borderRadius: radio.pastilla,
+            backgroundColor: activo ? verde.lima : verde.primario,
+            // El borde blanco sólo en el activo: es lo que lo levanta del
+            // racimo cuando hay varios marcadores pegados.
             borderWidth: activo ? 2 : 0,
             borderColor: superficie.tarjeta,
           },
           profundidad.marcador,
         ]}
       >
-        {/* El marcador cambia de fondo al activarse, así que la tinta también:
-            blanco sobre el verde profundo, oscuro sobre la menta. */}
-        <Texto variante="botonS" color={activo ? texto.sobrePrimario : texto.sobreAccion}>
+        {/* La tinta es la misma en los dos estados: menta y lima son dos
+            claros, y el oscuro se lee de sobra sobre ambos. */}
+        <Icono nombre="pets" tamano={14} color={texto.sobreAccion} />
+        <Texto variante="botonS" color={texto.sobreAccion}>
           {etiqueta}
         </Texto>
       </View>

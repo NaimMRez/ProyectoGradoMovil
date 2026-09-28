@@ -65,7 +65,11 @@ function AjustePunto({
     );
   }
 
-  const fuera = valor != null && !estaEnElCercado(valor);
+  // Se mira el punto efectivo y no sólo el borrador: en iOS el mapa avisa de
+  // su región nada más montarse y en Android puede tardar, así que fiarse del
+  // borrador dejaría el aviso mudo justo al abrir — que es cuando más hace
+  // falta si el GPS te ha situado fuera de la ciudad.
+  const fuera = !estaEnElCercado(valor ?? inicial.current);
 
   return (
     <View style={{ gap: espacio.lg }}>

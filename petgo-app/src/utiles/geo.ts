@@ -29,11 +29,31 @@ export function distanciaEnMetros(a: Punto, b: Punto): number {
   return 2 * RADIO_TIERRA_M * Math.asin(Math.sqrt(h));
 }
 
-/** Radio, en metros, fuera del cual se considera que no estás en el Cercado. */
-const RADIO_CERCADO_M = 40_000;
+/**
+ * Radio, en metros, dentro del cual un punto se da por del Cercado.
+ *
+ * Un círculo es una aproximación burda de un municipio, pero para avisar
+ * llega. Diez kilómetros desde la plaza principal dejan fuera Quillacollo y
+ * Sacaba — los dos a 12,9 km — y dentro todo lo que es ciudad, incluido el
+ * aeropuerto a 4,4 km. Tiquipaya (8,1) y Colcapirhua (6,9) caen dentro aunque
+ * sean otros municipios: son continuos con la mancha urbana y avisar allí
+ * sería un falso positivo. Lo riguroso sería el polígono del municipio.
+ */
+const RADIO_CERCADO_M = 10_000;
+
+/**
+ * Radio del área metropolitana. Es otra pregunta y por eso es otro número:
+ * no "¿este punto es del Cercado?" sino "¿esta persona está en Cochabamba?".
+ */
+const RADIO_METROPOLITANO_M = 40_000;
 
 export function estaEnElCercado(punto: Punto): boolean {
   return distanciaEnMetros(punto, CENTRO_CERCADO) <= RADIO_CERCADO_M;
+}
+
+/** Si el punto cae en Cochabamba y su área, no necesariamente en el Cercado. */
+export function estaEnCochabamba(punto: Punto): boolean {
+  return distanciaEnMetros(punto, CENTRO_CERCADO) <= RADIO_METROPOLITANO_M;
 }
 
 /**
@@ -54,6 +74,9 @@ export function origenDeBusqueda(punto: Punto | null): {
   origen: Punto;
   esReal: boolean;
 } {
-  if (punto && estaEnElCercado(punto)) return { origen: punto, esReal: true };
+  // Aquí la pregunta es si la posición sirve para buscar, no si el punto es
+  // del Cercado: a un cuidador de Quillacollo hay que buscarle desde donde
+  // está, no desde el centro de una ciudad que tiene al lado.
+  if (punto && estaEnCochabamba(punto)) return { origen: punto, esReal: true };
   return { origen: CENTRO_CERCADO, esReal: false };
 }

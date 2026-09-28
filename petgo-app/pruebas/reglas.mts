@@ -49,6 +49,7 @@ import {
 import {
   CENTRO_CERCADO,
   distanciaEnMetros,
+  estaEnCochabamba,
   estaEnElCercado,
   origenDeBusqueda,
 } from '../src/utiles/geo.ts';
@@ -217,10 +218,28 @@ prueba('el mismo punto está a cero metros de sí mismo', () => {
 });
 
 prueba('el Cercado se reconoce y La Paz no', () => {
-  assert.equal(estaEnElCercado({ lat: -17.383, lng: -66.175 }), true);
+  assert.equal(estaEnElCercado({ lat: -17.383, lng: -66.175 }), true, 'Sarco');
+  assert.equal(estaEnElCercado({ lat: -17.421, lng: -66.177 }), true, 'aeropuerto');
   assert.equal(estaEnElCercado({ lat: -16.5, lng: -68.15 }), false, 'La Paz');
   // El emulador de Android arranca en California.
   assert.equal(estaEnElCercado({ lat: 37.42, lng: -122.08 }), false, 'Mountain View');
+});
+
+prueba('el Cercado y el área metropolitana son dos preguntas distintas', () => {
+  // El caso que destapó el bug: con un único radio de 40 km, un punto de
+  // recogida en Quillacollo se daba por del Cercado y no avisaba de nada.
+  const quillacollo = { lat: -17.393, lng: -66.279 };
+  const sacaba = { lat: -17.404, lng: -66.038 };
+
+  for (const punto of [quillacollo, sacaba]) {
+    assert.equal(estaEnElCercado(punto), false);
+    assert.equal(estaEnCochabamba(punto), true);
+  }
+
+  // Y la posición de quien esté allí sigue sirviendo para buscar: se busca
+  // desde donde está, no desde el centro de la ciudad de al lado.
+  assert.equal(origenDeBusqueda(quillacollo).esReal, true);
+  assert.equal(estaEnCochabamba({ lat: -16.5, lng: -68.15 }), false, 'La Paz');
 });
 
 prueba('el origen de búsqueda cae al centro del Cercado fuera de Cochabamba', () => {

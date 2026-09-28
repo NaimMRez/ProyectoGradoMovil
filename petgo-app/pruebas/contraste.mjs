@@ -99,6 +99,18 @@ console.log('── BANDA DE LIMA DE LA TARJETA DE MASCOTA ──');
 ok('nombre sobre la lima', val('texto', 'tarjeta'), LIMA, TEXTO_MIN);
 ok('raza sobre la lima', val('texto', 'terciario'), LIMA, TEXTO_MIN);
 
+console.log('── MARCADORES DEL MAPA ──');
+// La huella y el importe van en la misma tinta en los dos estados del
+// marcador, así que se mide sobre los dos fondos.
+ok('huella e importe sobre la menta', val('texto', 'sobreAccion'), MENTA, TEXTO_MIN);
+ok('huella e importe sobre la lima', val('texto', 'sobreAccion'), LIMA, TEXTO_MIN);
+// El marcador activo se distingue del resto por el color de fondo, no sólo por
+// su borde: dos verdes claros pegados tienen que separarse por claridad.
+ok('el marcador activo se separa del resto', LIMA, MENTA, SUP_MIN);
+// El punto de recogida es lima con aro blanco; el aro es lo que lo despega de
+// una base de mapa muy clara.
+ok('el aro del punto de recogida', TARJETA, LIMA, SUP_MIN);
+
 console.log('── TARJETA PUNTEADA DE "MARCAR EN EL MAPA" ──');
 // Es la misma receta que el vacío de mascotas del inicio: panel de apoyo con
 // borde discontinuo. El texto va en verde sobre ese panel, que no es ni el

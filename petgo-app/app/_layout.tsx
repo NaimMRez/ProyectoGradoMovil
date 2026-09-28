@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useReducedMotion } from 'react-native-reanimated';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   DMSans_400Regular,
   DMSans_500Medium,
@@ -49,6 +50,13 @@ export default function LayoutRaiz() {
   const reducido = useReducedMotion();
 
   const [fuentesListas] = useFonts({
+    // La de los iconos va aquí y no se carga sola por una razón concreta: los
+    // marcadores del mapa llevan `tracksViewChanges={false}` — sin eso Android
+    // rerasteriza cada uno en cada fotograma — y eso fotografía la vista una
+    // sola vez. Si la fuente todavía no está, el marcador sale vacío y ya no
+    // se vuelve a dibujar. De paso, los iconos del resto de la app dejan de
+    // aparecer con un fotograma de retraso.
+    ...MaterialIcons.font,
     DMSans_400Regular,
     DMSans_500Medium,
     DMSans_600SemiBold,
