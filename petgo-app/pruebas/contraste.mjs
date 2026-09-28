@@ -99,6 +99,13 @@ console.log('── BANDA DE LIMA DE LA TARJETA DE MASCOTA ──');
 ok('nombre sobre la lima', val('texto', 'tarjeta'), LIMA, TEXTO_MIN);
 ok('raza sobre la lima', val('texto', 'terciario'), LIMA, TEXTO_MIN);
 
+console.log('── TARJETA PUNTEADA DE "MARCAR EN EL MAPA" ──');
+// Es la misma receta que el vacío de mascotas del inicio: panel de apoyo con
+// borde discontinuo. El texto va en verde sobre ese panel, que no es ni el
+// fondo de la app ni la tarjeta, así que se mide aparte.
+ok('rótulo sobre el panel de apoyo', val('verde', 'texto'), GRIS, TEXTO_MIN);
+ok('borde discontinuo sobre el panel', val('borde', 'discontinuo'), GRIS, 1.1);
+
 console.log('── BARRA DE DURACIÓN DEL PASEO ──');
 // La pista es arena y el relleno menta, así que el pulgar blanco tiene dos
 // fondos debajo y los topes también. Los topes son del mismo color en los dos

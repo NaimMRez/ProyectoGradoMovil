@@ -13,6 +13,7 @@ import { CabeceraDetalle } from '../src/components/Pantalla';
 import PhotoPlaceholder from '../src/components/PhotoPlaceholder';
 import PressableScale from '../src/components/PressableScale';
 import SelectorDuracion from '../src/components/SelectorDuracion';
+import { useSelectorUbicacion } from '../src/components/SelectorUbicacion';
 import { Skeleton } from '../src/components/Skeleton';
 import { useSelectorFechaHora } from '../src/components/SelectorFechaHora';
 import Texto from '../src/components/Texto';
@@ -28,17 +29,21 @@ import { borde, superficie, texto, verde } from '../src/theme/colors';
 import { espacio, radio } from '../src/theme/layout';
 import { curvaCSS, duracion as duracionMotion } from '../src/theme/motion';
 import { DIAS_MAXIMOS } from '../src/utiles/agenda';
+import type { Punto } from '../src/utiles/geo';
 
 const PASOS = ['Mascotas', 'Cuándo y cuánto', 'Ubicación'] as const;
 const PAGO_SUGERIDO = 40;
 
 /** Punto de recogida por defecto: la dirección de la dueña del seed. */
-const UBICACION_INICIAL = {
-  direccion: 'Av. América #1204, Sarco',
-  zona: 'Sarco',
-  lat: -17.383,
-  lng: -66.175,
-};
+/**
+ * La zona que se guarda con la solicitud.
+ *
+ * Es fija porque PetGo entero vive en el Cercado y el punto lo pone el dueño
+ * en el mapa: sacar el barrio de unas coordenadas pediría geocodificación
+ * inversa, y el dato que de verdad orienta al cuidador es la dirección que
+ * escribe el dueño, que se muestra encima de esta etiqueta.
+ */
+const ZONA = 'Cercado, Cochabamba';
 
 /** Barra de progreso: tres segmentos que se van tiñendo. */
 function Progreso({ paso }: { paso: number }) {
@@ -115,10 +120,16 @@ export default function Publicar() {
   // pone el formateador, que es el mismo que usa el resto de la app.
   const [duracion, setDuracion] = useState(60);
   const [pago, setPago] = useState('');
-  const [direccion, setDireccion] = useState(UBICACION_INICIAL.direccion);
+  // Ninguno de los dos arranca con valor: el punto lo pone el dueño en el mapa
+  // y la dirección la escribe él. Antes los dos venían rellenos con los datos
+  // de una vivienda del seed, así que toda solicitud se publicaba en el mismo
+  // sitio dijera lo que dijera el texto.
+  const [punto, setPunto] = useState<Punto | null>(null);
+  const [direccion, setDireccion] = useState('');
   const [notas, setNotas] = useState('');
 
   const selectorFecha = useSelectorFechaHora(fecha, setFecha);
+  const selectorUbicacion = useSelectorUbicacion(punto, setPunto);
   // Sin fecha no hay etiqueta que mostrar: el botón invita a elegirla.
   const cuandoEtiqueta = fecha ? fechaHora(fecha) : 'Elegir fecha y hora';
 
@@ -136,9 +147,10 @@ export default function Publicar() {
     );
 
   const publicar = () => {
-    // No se llega aquí sin fecha — el paso 2 no deja avanzar sin ella —, pero
-    // el tipo lo permite y una publicación sin fecha sería un registro roto.
-    if (!fecha) return;
+    // No se llega aquí sin fecha ni sin punto — los pasos 2 y 3 no dejan
+    // avanzar sin ellos —, pero el tipo lo permite y una publicación sin
+    // cualquiera de los dos sería un registro roto.
+    if (!fecha || !punto) return;
 
     const monto = Number.parseInt(pago, 10);
 
@@ -148,10 +160,10 @@ export default function Publicar() {
         fechaHora: fecha,
         duracionMin: duracion,
         pagoBs: monto,
-        direccion,
-        zona: UBICACION_INICIAL.zona,
-        lat: UBICACION_INICIAL.lat,
-        lng: UBICACION_INICIAL.lng,
+        direccion: direccion.trim(),
+        zona: ZONA,
+        lat: punto.lat,
+        lng: punto.lng,
         notas,
       },
       {
@@ -181,6 +193,15 @@ export default function Publicar() {
         return;
       }
       setPaso(2);
+      return;
+    }
+
+    if (!punto) {
+      mostrar('Marca el punto de recogida en el mapa', { tono: 'aviso', sobreTabs: false });
+      return;
+    }
+    if (!direccion.trim()) {
+      mostrar('Escribe la dirección de referencia', { tono: 'aviso', sobreTabs: false });
       return;
     }
 
@@ -419,47 +440,85 @@ export default function Publicar() {
               titulo={`¿Dónde recogen a ${nombresElegidos.length ? unirNombres(nombresElegidos) : 'tu mascota'}?`}
             />
 
-            <View
-              style={{
-                backgroundColor: superficie.tarjeta,
-                borderWidth: 1,
-                borderColor: borde.input,
-                borderRadius: radio.xl + 2,
-                overflow: 'hidden',
-              }}
-            >
-              {/* Mapa de confirmación: se mira, no se explora. Sin arrastre ni
-                  zoom, el scroll de la pantalla nunca se lo come. */}
-              <View style={{ height: 190 }}>
-                <Mapa
-                  interactivo={false}
-                  region={regionCercana(UBICACION_INICIAL.lat, UBICACION_INICIAL.lng)}
-                >
-                  <PinUbicacion
-                    latitude={UBICACION_INICIAL.lat}
-                    longitude={UBICACION_INICIAL.lng}
-                  />
-                </Mapa>
-              </View>
+            <View>
+              <Etiqueta>Punto de recogida</Etiqueta>
 
-              <TextInput
-                value={direccion}
-                onChangeText={setDireccion}
-                placeholder="Dirección del punto de recogida"
-                placeholderTextColor={texto.atenuado}
-                selectionColor={verde.primario}
-                style={{
-                  borderTopWidth: 1,
-                  borderTopColor: borde.sutil,
-                  paddingVertical: espacio.xxl,
-                  paddingHorizontal: espacio['3xl'],
-                  fontFamily: 'DMSans_400Regular',
-                  fontSize: 14,
-                  color: texto.principal,
-                }}
-                accessibilityLabel="Dirección del punto de recogida"
-              />
+              {punto ? (
+                /* Vista previa: se mira, no se explora. El ajuste se hace en
+                   un sheet aparte, donde el mapa tiene sitio de sobra y no
+                   compite con el scroll de esta pantalla. */
+                <PressableScale
+                  fuerza="suave"
+                  accessibilityRole="button"
+                  accessibilityLabel="Ajustar el punto de recogida en el mapa"
+                  onPress={selectorUbicacion.abrir}
+                  style={{
+                    backgroundColor: superficie.tarjeta,
+                    borderWidth: 1,
+                    borderColor: borde.input,
+                    borderRadius: radio.xl + 2,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <View style={{ height: 190 }}>
+                    <Mapa interactivo={false} region={regionCercana(punto.lat, punto.lng)}>
+                      <PinUbicacion latitude={punto.lat} longitude={punto.lng} />
+                    </Mapa>
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: espacio.lg,
+                      borderTopWidth: 1,
+                      borderTopColor: borde.sutil,
+                      paddingVertical: espacio.xxl,
+                      paddingHorizontal: espacio['3xl'],
+                    }}
+                  >
+                    <Icono nombre="my_location" tamano={18} color={verde.primario} />
+                    <Texto variante="boton" color={verde.texto} style={{ flex: 1 }}>
+                      Ajustar en el mapa
+                    </Texto>
+                    <Icono nombre="chevron_right" tamano={18} color={texto.inactivo} />
+                  </View>
+                </PressableScale>
+              ) : (
+                <PressableScale
+                  fuerza="suave"
+                  accessibilityRole="button"
+                  accessibilityLabel="Marcar el punto de recogida en el mapa"
+                  onPress={selectorUbicacion.abrir}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: espacio.lg,
+                    borderStyle: 'dashed',
+                    borderWidth: 1.5,
+                    borderColor: borde.discontinuo,
+                    borderRadius: radio.xl + 2,
+                    backgroundColor: superficie.aviso,
+                    paddingVertical: espacio['6xl'],
+                    paddingHorizontal: espacio['4xl'],
+                  }}
+                >
+                  <Icono nombre="place" tamano={20} color={verde.primario} />
+                  <Texto variante="boton" color={verde.texto}>
+                    Marcar en el mapa
+                  </Texto>
+                </PressableScale>
+              )}
             </View>
+
+            <Campo
+              etiqueta="Dirección de referencia"
+              value={direccion}
+              onChangeText={setDireccion}
+              placeholder="Ej. Av. América #1204, timbre 2B"
+              ayuda="El punto del mapa es el que usan los cuidadores para calcular la distancia; esto les ayuda a encontrar la puerta."
+            />
 
             <Campo
               etiqueta="Información adicional"
@@ -533,6 +592,7 @@ export default function Publicar() {
       </View>
 
       {selectorFecha.sheet}
+      {selectorUbicacion.sheet}
     </KeyboardAvoidingView>
   );
 }

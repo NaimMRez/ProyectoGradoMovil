@@ -118,6 +118,34 @@ export const Mapa = forwardRef<MapView, MapaProps>(function Mapa(
  * Pin de ubicación: un punto verde con anillo blanco, anclado en su base.
  * Para los mapas de confirmación, donde sólo hay un punto.
  */
+/**
+ * El disco del punto de recogida, sin mapa alrededor.
+ *
+ * Existe suelto porque se dibuja de dos maneras. En un mapa que sólo se mira
+ * va anclado a unas coordenadas, dentro de un `Marker`. En el mapa donde se
+ * elige el punto **no puede ser un `Marker`**: ahí lo que se mueve es el mapa
+ * y el punto se queda quieto en el centro, así que va encima como una vista
+ * normal. Si cada sitio lo dibujara por su cuenta, el mismo punto se vería de
+ * dos formas distintas en dos pantallas seguidas.
+ */
+export function MarcaPunto() {
+  return (
+    <View
+      style={[
+        {
+          width: 22,
+          height: 22,
+          borderRadius: radio.pastilla,
+          backgroundColor: verde.primario,
+          borderWidth: 4,
+          borderColor: superficie.tarjeta,
+        },
+        profundidad.marcador,
+      ]}
+    />
+  );
+}
+
 export function PinUbicacion({
   latitude,
   longitude,
@@ -127,19 +155,7 @@ export function PinUbicacion({
 }) {
   return (
     <Marker coordinate={{ latitude, longitude }} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
-      <View
-        style={[
-          {
-            width: 22,
-            height: 22,
-            borderRadius: radio.pastilla,
-            backgroundColor: verde.primario,
-            borderWidth: 4,
-            borderColor: superficie.tarjeta,
-          },
-          profundidad.marcador,
-        ]}
-      />
+      <MarcaPunto />
     </Marker>
   );
 }
