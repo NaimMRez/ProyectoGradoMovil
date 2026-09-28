@@ -163,7 +163,11 @@ export function useSelectorUbicacion(
   };
 
   const sheet = (
-    <Sheet abierto={abierto} onCerrar={() => setAbierto(false)}>
+    // `sinArrastre`: el contenido es un mapa que se arrastra, y el gesto de
+    // cierre del sheet se activa con 12 pt de movimiento vertical en cualquier
+    // punto del panel. Sin esto, mover el mapa hacia abajo cerraría el sheet.
+    // La salida queda en el backdrop y en el botón de cancelar.
+    <Sheet abierto={abierto} onCerrar={() => setAbierto(false)} sinArrastre>
       <Texto
         variante="tituloSheet"
         color={texto.principal}

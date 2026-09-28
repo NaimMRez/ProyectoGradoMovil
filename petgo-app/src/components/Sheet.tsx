@@ -25,6 +25,16 @@ export type SheetProps = {
   sinBackdrop?: boolean;
   /** Separación lateral. La vista previa del mapa flota; los demás van a ras. */
   flotante?: boolean;
+  /**
+   * Sin arrastre para descartar.
+   *
+   * Para un sheet cuyo contenido ya se arrastra. El gesto de cierre está en
+   * todo el panel y se activa con 12 pt de movimiento vertical, así que dentro
+   * de un mapa los dos gestos compiten: intentar mover el mapa hacia abajo
+   * cerraría el sheet. Quien lo use tiene que dejar otra salida — el backdrop
+   * sigue cerrando, y conviene un botón explícito.
+   */
+  sinArrastre?: boolean;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
 };
@@ -52,6 +62,7 @@ export function Sheet({
   onCerrar,
   sinBackdrop = false,
   flotante = false,
+  sinArrastre = false,
   children,
   style,
 }: SheetProps) {
@@ -161,7 +172,7 @@ export function Sheet({
         <View style={{ flex: 1 }} pointerEvents="none" />
       )}
 
-      <GestureDetector gesture={arrastre}>
+      <Envoltura gesto={arrastre} activa={!sinArrastre}>
         <Animated.View
           onLayout={(evento) => {
             const medido = evento.nativeEvent.layout.height;
@@ -187,12 +198,33 @@ export function Sheet({
             style,
           ]}
         >
-          <Asa />
+          {/* El asa dice "esto se arrastra". Si no se arrastra, miente. */}
+          {sinArrastre ? null : <Asa />}
           {children}
         </Animated.View>
-      </GestureDetector>
+      </Envoltura>
     </View>
   );
+}
+
+/**
+ * Pone o quita el `GestureDetector` sin cambiar el árbol de vistas.
+ *
+ * Un `if` alrededor del panel lo desmontaría y volvería a montar al cambiar,
+ * perdiendo la medida y el estado de sus hijos. Así el hijo es siempre el
+ * mismo elemento y lo único que aparece o desaparece es el detector.
+ */
+function Envoltura({
+  gesto,
+  activa,
+  children,
+}: {
+  gesto: ReturnType<typeof Gesture.Pan>;
+  activa: boolean;
+  children: ReactNode;
+}) {
+  if (!activa) return <>{children}</>;
+  return <GestureDetector gesture={gesto}>{children}</GestureDetector>;
 }
 
 /** La barrita gris que dice "esto se arrastra". */
